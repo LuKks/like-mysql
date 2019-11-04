@@ -1,0 +1,32 @@
+{
+  "name": "like-mysql",
+  "version": "1.0.0",
+  "description": "Simple and intuitive ORM for MySQL",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuKks/like-mysql.git"
+  },
+  "author": "Lucas Barrena <lucasbarrena@hotmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LuKks/like-mysql/issues"
+  },
+  "homepage": "https://github.com/LuKks/like-mysql#readme",
+  "keywords": [
+    "like",
+    "mysql",
+    "simple",
+    "intuitive",
+    "orm",
+    "mysql2",
+    "promise"
+  ],
+  "devDependencies": {},
+  "dependencies": {
+    "mysql2": "^2.0.0"
+  }
+}
