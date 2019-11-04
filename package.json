@@ -1,6 +1,6 @@
 {
   "name": "like-mysql",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Simple and intuitive ORM for MySQL",
   "main": "index.js",
   "scripts": {
