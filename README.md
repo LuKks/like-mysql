@@ -78,6 +78,8 @@ db.transaction(callback: Function): undefined
 Automatic `WHERE` when `find` argument doesn't start with:\
 `ORDER BY`, `LIMIT`, `GROUP BY`
 
+You still can use all others [node-mysql2](https://github.com/sidorares/node-mysql2) methods like `execute`, `query`, etc.
+
 ## Examples
 #### Insert
 ```javascript
