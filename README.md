@@ -14,6 +14,9 @@ db.insert('ip', { addr: req.ip, hits: 0 });
 // SELECT addr, hits FROM ip WHERE addr = ?
 db.select('ip', ['addr', 'hits'], 'addr = ?', req.ip);
 
+// SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
+db.selectOne('ip', ['addr', 'hits'], 'addr = ?', req.ip);
+
 // SELECT EXISTS(SELECT 1 FROM ip WHERE addr = ? LIMIT 1)
 db.exists('ip', 'addr = ?', req.ip);
 
@@ -50,7 +53,7 @@ Promise version. All custom methods are also promised.
 #### Properties
 After every execution the next variables are overwritten for immediate usage:
 ```javascript
-// only on select, exists or count:
+// only on select, selectOne, exists or count:
 db.rows: Array
 db.fields: Array
 // only on insert, update or delete:
@@ -65,6 +68,7 @@ db.changedRows: Number
 ```javascript
 db.insert(table: String, data: Object): Object
 db.select(table: String, cols: Array, find: String, ...any): Array
+db.selectOne(table: String, cols: Array, find: String, ...any): Object | undefined
 db.exists(table: String, find: String, ...any): Boolean
 db.count (table: String, find: String, ...any): Number
 db.update(table: String, data: Object, find: String, ...any): Object
@@ -106,6 +110,20 @@ console.log(db.rows); // [{ addr: '8.8.4.4', hits: 2 }]
 
 console.log(a); // [{ addr: '8.8.8.8', hits: 6 }, ...]
 console.log(b); // [{ addr: '8.8.4.4', hits: 2 }]
+```
+
+#### selectOne
+```javascript
+// SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
+let a = await db.selectOne('ip', ['addr', 'hits'], 'addr = ?', req.ip);
+console.log(db.rows); // [{ addr: '8.8.4.4', hits: 2 }]
+
+// SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
+let b = await db.selectOne('ip', ['addr', 'hits'], 'addr = ?', '0.0.0.0');
+console.log(db.rows); // []
+
+console.log(a); // { addr: '8.8.4.4', hits: 2 }
+console.log(b); // undefined
 ```
 
 #### Exists

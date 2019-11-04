@@ -23,6 +23,15 @@ function select (table, cols, find, ...values) {
   return execute.call(this, `SELECT ${cols} FROM ${table} ${find}`, values);
 }
 
+function selectOne (table, cols, find, ...values) {
+  cols = cols.join(', ');
+  find = parseFind(find);
+
+  return execute.call(this, `SELECT ${cols} FROM ${table} ${find} LIMIT 1`, values).then(() => {
+    return this.rows.length ? this.rows[0] : undefined;
+  });
+}
+
 function exists (table, find, ...values) {
   find = parseFind(find);
 
@@ -122,7 +131,7 @@ async function releaseOnError (promise) {
   let proto = {
     rows: [], fields: [],
     insertId: 0, fieldCount: 0, affectedRows: 0, changedRows: 0,
-    insert, select, exists, count, update, delete: delet3
+    insert, select, selectOne, exists, count, update, delete: delet3
   };
 
   for (let k in proto) base.prototype[k] = proto[k];
