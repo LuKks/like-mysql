@@ -85,27 +85,27 @@ Automatic `WHERE` when `find` argument doesn't start with:\
 You still can use all other [node-mysql2](https://github.com/sidorares/node-mysql2) methods like `execute`, `query`, etc.
 
 ## Examples
-#### Insert
+#### insert
 ```javascript
 // INSERT INTO ip (addr, hits) VALUES (?, ?)
-let a = await db.insert('ip', { addr: '8.8.8.8', hits: 0 });
+let a = await db.insert('ip', { addr: req.ip, hits: 0 });
 console.log(db.insertId); // 1336
 
-let b = await db.insert('ip', { addr: '8.8.4.4', hits: 0 });
+let b = await db.insert('ip', { addr: req.ip, hits: 0 });
 console.log(db.insertId); // 1337
 
 console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 1336, ... }
 console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 1337, ... }
 ```
 
-#### Select
+#### select
 ```javascript
 // SELECT addr, hits FROM ip ORDER BY hits DESC
 let a = await db.select('ip', ['addr', 'hits'], 'ORDER BY hits DESC');
 console.log(db.rows); // [{ addr: '8.8.8.8', hits: 6 }, ...]
 
 // SELECT addr, hits FROM ip WHERE addr = ?
-let b = await db.select('ip', ['addr', 'hits'], 'addr = ?', '8.8.4.4');
+let b = await db.select('ip', ['addr', 'hits'], 'addr = ?', req.ip);
 console.log(db.rows); // [{ addr: '8.8.4.4', hits: 2 }]
 
 console.log(a); // [{ addr: '8.8.8.8', hits: 6 }, ...]
@@ -126,21 +126,21 @@ console.log(a); // { addr: '8.8.4.4', hits: 2 }
 console.log(b); // undefined
 ```
 
-#### Exists
+#### exists
 ```javascript
 // SELECT EXISTS(SELECT 1 FROM ip WHERE addr = ? LIMIT 1)
-let a = await db.exists('ip', 'addr = ?', '8.8.8.8');
+let a = await db.exists('ip', 'addr = ?', req.ip);
 console.log(a); // true
 ```
 
-#### Count
+#### count
 ```javascript
 // SELECT COUNT(1) FROM ip WHERE addr = ?
-let a = await db.count('ip', 'addr = ?', '8.8.8.8');
-console.log(a); // 1
+let a = await db.count('ip', 'addr = ?', req.ip);
+console.log(a); // 2
 ```
 
-#### Update
+#### update
 ```javascript
 // UPDATE ip SET hits = ? WHERE addr = ?
 let a = await db.update('ip', { hits: 1 }, 'addr = ?', req.ip);
@@ -154,15 +154,15 @@ console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1
 console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
 ```
 
-#### Delete
+#### delete
 ```javascript
 // DELETE FROM ip WHERE addr = ?
-let a = await db.delete('ip', 'addr = ?', '8.8.8.8');
+let a = await db.delete('ip', 'addr = ?', req.ip);
 console.log(db.affectedRows); // 1
 console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
 ```
 
-#### Transaction
+#### transaction
 Normally with a pool you do something like:
 - `conn = pool.getConnection`
 - `conn.beginTransaction`
