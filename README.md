@@ -9,7 +9,7 @@ const mysql = require('like-mysql');
 const db = mysql.createPool({ /*config*/ });
 
 // INSERT INTO ip (addr, hits) VALUES (?, ?)
-db.insert('ip', { addr: '8.8.8.8', hits: 0 });
+db.insert('ip', { addr: req.ip, hits: 0 });
 
 // SELECT addr, hits FROM ip WHERE addr = ?
 db.select('ip', ['addr', 'hits'], 'addr = ?', req.ip);
@@ -78,7 +78,7 @@ db.transaction(callback: Function): undefined
 Automatic `WHERE` when `find` argument doesn't start with:\
 `ORDER BY`, `LIMIT`, `GROUP BY`
 
-You still can use all others [node-mysql2](https://github.com/sidorares/node-mysql2) methods like `execute`, `query`, etc.
+You still can use all other [node-mysql2](https://github.com/sidorares/node-mysql2) methods like `execute`, `query`, etc.
 
 ## Examples
 #### Insert
@@ -112,18 +112,14 @@ console.log(b); // [{ addr: '8.8.4.4', hits: 2 }]
 ```javascript
 // SELECT EXISTS(SELECT 1 FROM ip WHERE addr = ? LIMIT 1)
 let a = await db.exists('ip', 'addr = ?', '8.8.8.8');
-let b = await db.exists('ip', 'addr = ?', '1.1.1.1');
 console.log(a); // true
-console.log(b); // false
 ```
 
 #### Count
 ```javascript
 // SELECT COUNT(1) FROM ip WHERE addr = ?
 let a = await db.count('ip', 'addr = ?', '8.8.8.8');
-let b = await db.count('ip', 'addr = ?', '1.1.1.1');
 console.log(a); // 1
-console.log(b); // 0
 ```
 
 #### Update
@@ -145,12 +141,7 @@ console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1
 // DELETE FROM ip WHERE addr = ?
 let a = await db.delete('ip', 'addr = ?', '8.8.8.8');
 console.log(db.affectedRows); // 1
-
-let b = await db.delete('ip', 'addr = ?', '8.8.8.8');
-console.log(db.affectedRows); // 1
-
 console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
-console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
 ```
 
 #### Transaction
