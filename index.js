@@ -73,13 +73,9 @@ parseFind('id = ?'); //WHERE id = ?
 parseFind('LIMIT 1'); //LIMIT 1
 */
 function parseFind (find) {
-  if (!find) {
-    return '';
-  }
-  if (find.startsWith('ORDER BY') || find.startsWith('LIMIT') || find.startsWith('GROUP BY')) {
-    return find;
-  }
-  return 'WHERE ' + find;
+  if (!find) return '';
+  let known = ['ORDER BY', 'LIMIT', 'GROUP BY'].some(op => find.indexOf(op) === 0);
+  return known ? find : 'WHERE ' + find;
 }
 
 function execute (query, values) {
