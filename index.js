@@ -9,7 +9,7 @@
 const mysql = require('mysql2/promise');
 
 function insert (table, data) {
-  let cols = Object.keys(data).join(', ');
+  let cols = Object.keys(data).map(c => '`' + c + '`').join(', ');
   let values = Object.values(data);
   let placeholders = Array(values.length).fill('?').join(', ');
 
@@ -17,14 +17,14 @@ function insert (table, data) {
 }
 
 function select (table, cols, find, ...values) {
-  cols = cols.join(', ');
+  cols = cols.map(c => '`' + c + '`').join(', ');
   find = parseFind(find);
 
   return execute.call(this, `SELECT ${cols} FROM ${table} ${find}`, values);
 }
 
 function selectOne (table, cols, find, ...values) {
-  cols = cols.join(', ');
+  cols = cols.map(c => '`' + c + '`').join(', ');
   find = parseFind(find);
 
   return execute.call(this, `SELECT ${cols} FROM ${table} ${find} LIMIT 1`, values).then(() => {
@@ -53,7 +53,7 @@ function update (table, data, find, ...values) {
   let arithmetic = Array.isArray(data);
   let dataRef = arithmetic ? data[0] : data;
   for (let k in dataRef) {
-    set.push(k + ' = ' + (arithmetic ? dataRef[k] : '?'));
+    set.push('`' + k + '` = ' + (arithmetic ? dataRef[k] : '?'));
   }
   set = set.join(', ');
   find = parseFind(find);
