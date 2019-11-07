@@ -123,6 +123,20 @@ async function releaseOnError (promise) {
   }
 }
 
+function waitConnection (retry = 5, time = 500) {
+  return new Promise((resolve, reject) => {
+    this.getConnection().then(conn => {
+      conn.release();
+      resolve();
+    }).catch(err => {
+      if (!--retry) throw err;
+      setTimeout(() => {
+        this.waitConnection(retry, time).then(resolve).catch(reject);
+      }, time);
+    });
+  });
+}
+
 [mysql.PromiseConnection, mysql.PromisePool].forEach(base => {
   let proto = {
     rows: [], fields: [],
@@ -134,5 +148,6 @@ async function releaseOnError (promise) {
 });
 
 mysql.PromisePool.prototype.transaction = transaction;
+mysql.PromisePool.prototype.waitConnection = waitConnection;
 
 module.exports = mysql;

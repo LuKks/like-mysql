@@ -8,6 +8,9 @@ Simple and intuitive ORM for MySQL
 const mysql = require('like-mysql');
 const db = mysql.createPool({ /*config*/ });
 
+// wait until a connection is established
+db.waitConnection();
+
 // INSERT INTO ip (addr, hits) VALUES (?, ?)
 db.insert('ip', { addr: req.ip, hits: 0 });
 
@@ -75,9 +78,10 @@ db.update(table: String, data: Object, find: String, ...any): Object
 db.update(table: String, data: Array[Object, ...any], find: String, ...any): Object
 db.delete(table: String, find: String, ...any): Object
 db.transaction(callback: Function): undefined
+db.waitConnection(retry = 5: Number, time = 500: Number): undefined
 ```
 
-`transaction` method only available on pool instances.
+`transaction` and `waitConnection` methods only available on pool instances.
 
 Automatic `WHERE` when `find` argument doesn't start with:\
 `ORDER BY`, `LIMIT`, `GROUP BY`
@@ -187,6 +191,18 @@ await db.transaction(async function () {
   await this.insert(...);
   await this.insert(...);
 });
+```
+
+#### waitConnection
+Very useful to wait the database connection started by docker-compose.
+```javascript
+db.waitConnection().then(main);
+
+async function main () {
+  // ...
+  await db.query(...);
+  // ...
+}
 ```
 
 ## Tests
