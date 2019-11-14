@@ -70,13 +70,13 @@ db.changedRows: Number
 #### Methods
 ```javascript
 db.insert(table: String, data: Object): Object
-db.select(table: String, cols: Array, find: String, ...any): Array
-db.selectOne(table: String, cols: Array, find: String, ...any): Object | undefined
-db.exists(table: String, find: String, ...any): Boolean
-db.count (table: String, find: String, ...any): Number
-db.update(table: String, data: Object, find: String, ...any): Object
-db.update(table: String, data: Array[Object, ...any], find: String, ...any): Object
-db.delete(table: String, find: String, ...any): Object
+db.select(table: String, cols: Array, find?: String, ...any): Array
+db.selectOne(table: String, cols: Array, find?: String, ...any): Object | undefined
+db.exists(table: String, find?: String, ...any): Boolean
+db.count (table: String, find?: String, ...any): Number
+db.update(table: String, data: Object, find?: String, ...any): Object
+db.update(table: String, data: Array[Object, ...any], find?: String, ...any): Object
+db.delete(table: String, find?: String, ...any): Object
 db.transaction(callback: Function): undefined
 db.waitConnection(retry = 5: Number, time = 500: Number): undefined
 ```
