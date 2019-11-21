@@ -207,7 +207,7 @@ async function main () {
 
 ## Tests
 ```
-There are no tests yet
+npm test
 ```
 
 ## License
