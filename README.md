@@ -84,7 +84,7 @@ db.waitConnection(retry = 5: Number, time = 500: Number): undefined
 `transaction` and `waitConnection` methods only available on pool instances.
 
 Automatic `WHERE` when `find` argument doesn't start with:\
-`ORDER BY`, `LIMIT`, `GROUP BY`
+`ORDER BY`, `LIMIT` or `GROUP BY`
 
 You still can use all other [node-mysql2](https://github.com/sidorares/node-mysql2) methods like `execute`, `query`, etc.
 
