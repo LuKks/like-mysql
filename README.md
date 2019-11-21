@@ -56,6 +56,9 @@ Promise version. All custom methods are also promised.
 #### Properties
 After every execution the next variables are overwritten for immediate usage:
 ```javascript
+// on every operation
+db.sql: String
+db.values: Array
 // only on select, selectOne, exists or count:
 db.rows: Array
 db.fields: Array
