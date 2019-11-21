@@ -1,13 +1,9 @@
-/*
-CREATE DATABASE test CHARACTER SET utf8 COLLATE utf8_unicode_ci;
-*/
-
 module.exports.conn = {
   host: '127.0.0.1',
   port: 3306,
   user: 'root',
   password: 'secret',
-  database: 'test',
+  database: 'sys',
   charset: 'UTF8_UNICODE_CI',
   supportBigNumbers: true,
   decimalNumbers: true
