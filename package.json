@@ -4,7 +4,7 @@
   "description": "Simple and intuitive ORM for MySQL",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tap"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,9 @@
     "mysql2",
     "promise"
   ],
-  "devDependencies": {},
+  "devDependencies": {
+    "tap": "^14.9.2"
+  },
   "dependencies": {
     "mysql2": "^2.0.0"
   }
