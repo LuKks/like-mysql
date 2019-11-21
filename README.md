@@ -206,8 +206,20 @@ async function main () {
 ```
 
 ## Tests
+Start a database instance
+```
+docker run --rm -p 3306:3306 -e MYSQL_ROOT_USER=root -e MYSQL_ROOT_PASSWORD=secret -d mysql:8.0
+```
+
+Wait a few seconds for instance creation and run tests
 ```
 npm test
+```
+
+Stop container and due --rm will be auto deleted
+```
+docker ps
+docker stop cc6
 ```
 
 ## License
