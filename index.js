@@ -20,14 +20,14 @@ function select (table, cols, find, ...values) {
   cols = cols.map(c => '`' + c + '`').join(', ');
   find = parseFind(find);
 
-  return execute.call(this, `SELECT ${cols} FROM ${table} ${find}`, values);
+  return execute.call(this, `SELECT ${cols} FROM ${table}${find}`, values);
 }
 
 function selectOne (table, cols, find, ...values) {
   cols = cols.map(c => '`' + c + '`').join(', ');
   find = parseFind(find);
 
-  return execute.call(this, `SELECT ${cols} FROM ${table} ${find} LIMIT 1`, values).then(() => {
+  return execute.call(this, `SELECT ${cols} FROM ${table}${find} LIMIT 1`, values).then(() => {
     return this.rows.length ? this.rows[0] : undefined;
   });
 }
@@ -35,7 +35,7 @@ function selectOne (table, cols, find, ...values) {
 function exists (table, find, ...values) {
   find = parseFind(find);
 
-  return execute.call(this, `SELECT EXISTS(SELECT 1 FROM ${table} ${find} LIMIT 1)`, values).then(() => {
+  return execute.call(this, `SELECT EXISTS(SELECT 1 FROM ${table}${find} LIMIT 1)`, values).then(() => {
     return this.rows[0][this.fields[0].name] ? true : false;
   });
 }
@@ -43,7 +43,7 @@ function exists (table, find, ...values) {
 function count (table, find, ...values) {
   find = parseFind(find);
 
-  return execute.call(this, `SELECT COUNT(1) FROM ${table} ${find}`, values).then(() => {
+  return execute.call(this, `SELECT COUNT(1) FROM ${table}${find}`, values).then(() => {
     return this.rows[0][this.fields[0].name];
   });
 }
@@ -59,27 +59,29 @@ function update (table, data, find, ...values) {
   find = parseFind(find);
   values.unshift(...Object.values(arithmetic ? data.slice(1) : data));
 
-  return execute.call(this, `UPDATE ${table} SET ${set} ${find}`, values);
+  return execute.call(this, `UPDATE ${table} SET ${set}${find}`, values);
 }
 
 function delet3 (table, find, ...values) {
   find = parseFind(find);
 
-  return execute.call(this, `DELETE FROM ${table} ${find}`, values);
+  return execute.call(this, `DELETE FROM ${table}${find}`, values);
 }
 
 /*
-parseFind('id = ?'); //WHERE id = ?
-parseFind('LIMIT 1'); //LIMIT 1
+parseFind('id = ?'); // WHERE id = ?
+parseFind('LIMIT 1'); // LIMIT 1
 */
 function parseFind (find) {
   if (!find) return '';
   let known = ['ORDER BY', 'LIMIT', 'GROUP BY'].some(op => find.indexOf(op) === 0);
-  return known ? find : 'WHERE ' + find;
+  return known ? (' ' + find) : (' WHERE ' + find);
 }
 
-function execute (query, values) {
-  return this.execute(query, values).then(([res, fields]) => {
+function execute (sql, values) {
+  return this.execute(sql, values).then(([res, fields]) => {
+    this.sql = sql;
+    this.values = values;
     if (fields) { // select
       this.rows = res;
       this.fields = fields;
@@ -129,7 +131,7 @@ function waitConnection (retry = 5, time = 500) {
       conn.release();
       resolve();
     }).catch(err => {
-      if (!--retry) throw err;
+      if (!--retry) return reject(err);
       setTimeout(() => {
         this.waitConnection(retry, time).then(resolve).catch(reject);
       }, time);
