@@ -9,7 +9,7 @@ const mysql = require('like-mysql');
 const db = mysql.createPool({ /*config*/ });
 
 // wait until a connection is established
-db.waitConnection();
+db.waitConnection(); // => Promise as all methods
 
 // INSERT INTO ip (addr, hits) VALUES (?, ?)
 db.insert('ip', { addr: req.ip, hits: 0 });
