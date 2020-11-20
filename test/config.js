@@ -6,7 +6,8 @@ module.exports.conn = {
   database: 'sys',
   charset: 'UTF8_UNICODE_CI',
   supportBigNumbers: true,
-  decimalNumbers: true
+  decimalNumbers: true,
+  connectionLimit: 40
 };
 
 module.exports.createTable = async function (db, name) {
