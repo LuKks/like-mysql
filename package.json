@@ -1,6 +1,6 @@
 {
   "name": "like-mysql",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Simple and intuitive ORM for MySQL",
   "main": "index.js",
   "scripts": {
@@ -29,6 +29,6 @@
     "tap": "^14.9.2"
   },
   "dependencies": {
-    "mysql2": "^2.1.0"
+    "mysql2": "^2.2.5"
   }
 }

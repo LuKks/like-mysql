@@ -166,14 +166,14 @@ function insert (table, data) {
 }
 
 function select (table, cols, find, ...values) {
-  cols = cols.map(c => '`' + c + '`').join(', ');
+  cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ');
   find = parseFind(find);
 
   return execute.call(this, `SELECT ${cols} FROM ${table}${find}`, values);
 }
 
 function selectOne (table, cols, find, ...values) {
-  cols = cols.map(c => '`' + c + '`').join(', ');
+  cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ');
   find = parseFind(find);
 
   return execute.call(this, `SELECT ${cols} FROM ${table}${find} LIMIT 1`, values).then(() => {
