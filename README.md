@@ -18,7 +18,7 @@ db.createDatabase('mydb');
 
 // CREATE TABLE IF NOT EXISTS `mydb`.`ip` (...)
 db.createTable('ip', {
-	id: { type: 'int', unsigned: true, increment: true, primary: true },
+  id: { type: 'int', unsigned: true, increment: true, primary: true },
   addr: { type: 'varchar', length: 16, required: true, index: true },
   hits: { type: 'int', unsigned: true, default: 0 }
 });
