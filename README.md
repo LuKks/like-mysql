@@ -80,7 +80,7 @@ db.count (table: String, find?: String, ...any): Number
 db.update(table: String, data: Object, find?: String, ...any): Object
 db.update(table: String, data: Array[Object, ...any], find?: String, ...any): Object
 db.delete(table: String, find?: String, ...any): Object
-db.transaction(callback: Function): undefined
+db.transaction(callback: Function): any | undefined
 db.waitConnection(retry = 5: Number, time = 500: Number): undefined
 ```
 
@@ -194,6 +194,15 @@ await db.transaction(async function () {
   await this.insert(...);
   await this.insert(...);
 });
+```
+
+You can also return a custom value:
+```javascript
+let result = await db.transaction(async function () {
+  await this.insert(...);
+  return 'custom value';
+});
+console.log(result); // => 'custom value'
 ```
 
 #### waitConnection

@@ -104,7 +104,7 @@ async function transaction (callback) {
   await releaseOnError.call(conn, conn.beginTransaction());
 
   try {
-    await callback.call(conn, conn);
+    let callbackResult = await callback.call(conn, conn);
     await conn.commit();
   } catch (err) {
     await releaseOnError.call(conn, conn.rollback());
@@ -114,6 +114,8 @@ async function transaction (callback) {
   }
 
   conn.release();
+
+  return callbackResult;
 }
 
 async function releaseOnError (promise) {
