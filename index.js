@@ -6,20 +6,28 @@
 
 'use strict';
 
-/*
-CREATE DATABASE IF NOT EXISTS `meli` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-db.createDatabase('meli', {
-  charset: 'utf8mb4',
-  collate: 'utf8mb4_unicode_ci'
-});
-*/
+// mysqldump -h 127.0.0.1 --port=3307 -u root -p meli categories > categories.sql
+// db.dump();
+
+const mysql = require('mysql2/promise');
+
 function createDatabase (name, options) {
   options = Object.assign({
     charset: 'utf8mb4',
     collate: 'utf8mb4_unicode_ci'
   }, options);
 
-  return execute.call(this, `CREATE DATABASE IF NOT EXISTS \`${name}\` DEFAULT CHARACTER SET ${options.charset} COLLATE ${options.collate}`);
+  return execute.call(this, `CREATE DATABASE IF NOT EXISTS \`${name}\` DEFAULT CHARACTER SET ${options.charset} COLLATE ${options.collate}`).then(([res, fields]) => {
+    return res;
+  });
+}
+
+function deleteDatabase (name) {
+  name = '`' + name + '`';
+
+  return execute.call(this, `DROP DATABASE IF EXISTS ${name}`).then(([res, fields]) => {
+    return res;
+  });
 }
 
 function createTable (name, columns, options) {
@@ -27,9 +35,9 @@ function createTable (name, columns, options) {
 
   // defaults
   let primaryKeys = [];
-  let { index, unique, engine, increment, charset, collate } = Object.assign({
-    index: {},
+  let { unique, index, engine, increment, charset, collate } = Object.assign({
     unique: {},
+    index: {},
     engine: 'InnoDB',
     increment: undefined,
     charset: 'utf8mb4',
@@ -50,20 +58,20 @@ function createTable (name, columns, options) {
     primaryKeys = '';
   }
 
-  // index
-  if (Object.keys(index).length) {
-    index = parseIndex('INDEX', index);
-    index = ',\n' + Object.values(index).join(',\n');
-  } else {
-    index = '';
-  }
-
   // unique
   if (Object.keys(unique).length) {
     unique = parseIndex('UNIQUE KEY', unique);
     unique = ',\n' + Object.values(unique).join(',\n');
   } else {
     unique = '';
+  }
+
+  // index
+  if (Object.keys(index).length) {
+    index = parseIndex('INDEX', index);
+    index = ',\n' + Object.values(index).join(',\n');
+  } else {
+    index = '';
   }
 
   // options
@@ -74,8 +82,10 @@ function createTable (name, columns, options) {
 
   // create table
   return execute.call(this, `CREATE TABLE IF NOT EXISTS \`${database}\`.\`${name}\` (
-${columns}${primaryKeys}${index}${unique}
-)${engine}${increment}${charset}${collate}`);
+${columns}${primaryKeys}${unique}${index}
+)${engine}${increment}${charset}${collate}`).then(([res, fields]) => {
+    return res;
+  });
 
   function parseColumn (name, value) {
     // inline, for example { price: 'decimal(11,2) NOT NULL' }
@@ -84,7 +94,8 @@ ${columns}${primaryKeys}${index}${unique}
     }*/
 
     // object, for example { price: { type: 'decimal', length: [11, 2], required: true } }
-    let { type, length, unsigned, collate, required/*, default*/, increment, primary } = value;
+    let { type, length, unsigned, collate, required, defaultt = value.default, increment, primary } = value;
+    // "default" is a keyword, it can't be a variable
 
     if (!type) {
       type = 'int';
@@ -109,18 +120,18 @@ ${columns}${primaryKeys}${index}${unique}
 
     required = required || primary ? ' NOT NULL' : ' NULL';
 
-    if (typeof value.default !== 'undefined' && !increment) {
+    if (typeof defaultt !== 'undefined' && !increment) {
       // strings have simple quotes
-      if (typeof value.default === 'string') {
-        value.default = `'${value.default}'`
+      if (typeof defaultt === 'string') {
+        defaultt = `'${defaultt}'`
       }
       // it's just uppercase for null
-      if (value.default === null) {
-        value.default = 'NULL';
+      if (defaultt === null) {
+        defaultt = 'NULL';
       }
-      value.default = ' DEFAULT ' + value.default;
+      defaultt = ' DEFAULT ' + defaultt;
     } else {
-      value.default = '';
+      defaultt = '';
     }
 
     increment = increment ? ' AUTO_INCREMENT' : '';
@@ -128,16 +139,16 @@ ${columns}${primaryKeys}${index}${unique}
     // if, add to primary keys
     primary && primaryKeys.push(name);
 
-    return `  \`${name}\` ${type}${length}${unsigned}${collate}${required}${value.default}${increment}`;
+    return `  \`${name}\` ${type}${length}${unsigned}${collate}${required}${defaultt}${increment}`;
   }
 
   function parseIndex (type, index) {
     for (let key in index) {
       let columns = index[key];
 
-      // for example: ['fullname,ASC', 'dni', 'birthdate,DESC']
+      // for example: ['fullname ASC', 'dni', 'birthdate DESC']
       columns = columns.map(column => {
-        let [colName, order] = column.split(',');
+        let [colName, order] = column.split(' ');
         return `\`${colName}\` ${order || 'ASC'}`;
       }).join(', ');
 
@@ -149,51 +160,58 @@ ${columns}${primaryKeys}${index}${unique}
   }
 }
 
-// db.deleteDatabase('meli');
-// db.deleteTable('items');
+function deleteTable (name) {
+  if (!Array.isArray(name)) {
+    name = [name];
+  }
+  name = name.map(v => '`' + v + '`').join(', ');
 
-// mysqldump -h 127.0.0.1 --port=3307 -u root -p meli categories > categories.sql
-// db.dump();
-
-const mysql = require('mysql2/promise');
+  return execute.call(this, `DROP TABLE IF EXISTS ${name}`).then(([res, fields]) => {
+    return res;
+  });
+}
 
 function insert (table, data) {
   let cols = Object.keys(data).map(c => '`' + c + '`').join(', ');
   let values = Object.values(data);
   let placeholders = Array(values.length).fill('?').join(', ');
 
-  return execute.call(this, `INSERT INTO ${table} (${cols}) VALUES (${placeholders})`, values);
+  return execute.call(this, `INSERT INTO ${table} (${cols}) VALUES (${placeholders})`, values).then(([res, fields]) => {
+    return res;
+  });
 }
 
 function select (table, cols, find, ...values) {
   cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ');
   find = parseFind(find);
 
-  return execute.call(this, `SELECT ${cols} FROM ${table}${find}`, values);
+  return execute.call(this, `SELECT ${cols} FROM ${table}${find}`, values).then(([res, fields]) => {
+    return res;
+  });
 }
 
 function selectOne (table, cols, find, ...values) {
   cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ');
   find = parseFind(find);
 
-  return execute.call(this, `SELECT ${cols} FROM ${table}${find} LIMIT 1`, values).then(() => {
-    return this.rows.length ? this.rows[0] : undefined;
+  return execute.call(this, `SELECT ${cols} FROM ${table}${find} LIMIT 1`, values).then(([res, fields]) => {
+    return res.length ? res[0] : undefined;
   });
 }
 
 function exists (table, find, ...values) {
   find = parseFind(find);
 
-  return execute.call(this, `SELECT EXISTS(SELECT 1 FROM ${table}${find} LIMIT 1)`, values).then(() => {
-    return this.rows[0][this.fields[0].name] ? true : false;
+  return execute.call(this, `SELECT EXISTS(SELECT 1 FROM ${table}${find} LIMIT 1)`, values).then(([res, fields]) => {
+    return res[0][fields[0].name] ? true : false;
   });
 }
 
 function count (table, find, ...values) {
   find = parseFind(find);
 
-  return execute.call(this, `SELECT COUNT(1) FROM ${table}${find}`, values).then(() => {
-    return this.rows[0][this.fields[0].name];
+  return execute.call(this, `SELECT COUNT(1) FROM ${table}${find}`, values).then(([res, fields]) => {
+    return res[0][fields[0].name];
   });
 }
 
@@ -208,13 +226,17 @@ function update (table, data, find, ...values) {
   find = parseFind(find);
   values.unshift(...Object.values(arithmetic ? data.slice(1) : data));
 
-  return execute.call(this, `UPDATE ${table} SET ${set}${find}`, values);
+  return execute.call(this, `UPDATE ${table} SET ${set}${find}`, values).then(([res, fields]) => {
+    return res;
+  });
 }
 
 function delet3 (table, find, ...values) {
   find = parseFind(find);
 
-  return execute.call(this, `DELETE FROM ${table}${find}`, values);
+  return execute.call(this, `DELETE FROM ${table}${find}`, values).then(([res, fields]) => {
+    return res;
+  });
 }
 
 /*
@@ -228,52 +250,34 @@ function parseFind (find) {
 }
 
 function execute (sql, values) {
-  console.log('execute');
-  console.log(sql);
-
-  return this.execute(sql, values).then(([res, fields]) => {
-    this.sql = sql;
-    this.values = values;
-    if (fields) { // select
-      this.rows = res;
-      this.fields = fields;
-    } else { // insert, update, delete
-      this.insertId = res.insertId;
-      this.fieldCount = res.fieldCount;
-      this.affectedRows = res.affectedRows;
-      // update
-      if (typeof res.changedRows !== 'undefined') {
-        this.changedRows = res.changedRows;
-      }
-    }
-    return res;
-  });
+  console.log('execute', sql);
+  this.sql = sql;
+  this.values = values;
+  return this.execute(sql, values);
 }
 
 async function transaction (callback) {
   let conn = await this.getConnection();
 
-  await releaseOnError.call(conn, conn.beginTransaction());
+  await releaseOnError(conn, conn.beginTransaction());
 
   try {
     await callback.call(conn, conn);
     await conn.commit();
   } catch (err) {
-    await releaseOnError.call(conn, conn.rollback());
+    await releaseOnError(conn, conn.rollback());
 
     conn.release();
     throw err;
   }
 
   conn.release();
-}
 
-async function releaseOnError (promise) {
-  try {
-    await promise;
-  } catch (err) {
-    this.release();
-    throw err;
+  function releaseOnError (conn, promise) {
+    return promise.catch(err => {
+      conn.release();
+      throw err;
+    });
   }
 }
 
@@ -317,22 +321,20 @@ function createLink (host, user, password, database, options) {
   return mysql.createPool(options);
 }
 
-function waitConnection (retry = 10, time = 500) {
-  return new Promise(async (resolve, reject) => {
+async function waitConnection (retry = 10, time = 500) {
+  while (retry--) {
     try {
       let conn = await this.getConnection();
       conn.release();
-      resolve();
     } catch (err) {
-      if (!--retry) {
-        reject(err);
-        return;
-      }
-      setTimeout(() => {
-        this.waitConnection(retry, time).then(resolve).catch(reject);
-      }, time);
+      if (!retry) throw err;
+      await sleep(time);
     }
-  });
+  }
+
+  function sleep (ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
 }
 
 mysql.createLink = createLink;
@@ -340,8 +342,6 @@ mysql.PromisePool.prototype.waitConnection = waitConnection;
 
 [mysql.PromiseConnection, mysql.PromisePool].forEach(base => {
   let proto = {
-    rows: [], fields: [],
-    insertId: 0, fieldCount: 0, affectedRows: 0, changedRows: 0,
     createDatabase, createTable,
     insert, select, selectOne, exists, count, update, delete: delet3
   };

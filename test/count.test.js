@@ -7,32 +7,10 @@ const TABLE = 'users' + parseInt(process.env.TAP_CHILD_ID || 0);
 
 (async () => {
   await db.waitConnection();
-  //await cfg.createTable(db, TABLE);
-
-  await db.createTable('items', {
-    id: { type: 'int', unsigned: true, required: true, increment: true, primary: true },
-    fullname: { type: 'varchar', length: 64, collate: 'utf8mb4_unicode_ci', required: true },
-    description: { type: 'varchar', length: 256, required: true },
-    price: { type: 'decimal', length: [11, 2], required: true },
-    dni: { type: 'int', unsigned: true, required: true },
-    birthdate: { type: 'date', default: null },
-    liq: { type: 'decimal(11,2)', required: true },
-    cuit: { type: 'bigint', unsigned: true, required: true },
-    posted: { type: 'tinyint', unsigned: true, required: true },
-  }, {
-    index: {
-      person2: ['fullname,ASC', 'dni,ASC']
-    },
-    unique: {
-      person_dni: ['dni', 'fullname']
-    },
-    engine: 'InnoDB',
-    increment: 95406,
-    charset: 'utf8mb4',
-    collate: 'utf8mb4_unicode_ci'
-  });
-
-  return;
+  await cfg.createTable(db, TABLE);
+  await db.insert(TABLE, { name: 'ab', code: 12 });
+  await db.insert(TABLE, { name: 'cd', code: 34 });
+  await db.insert(TABLE, { name: 'ab', code: 56 });
 
   let result = await db.count(TABLE, 'name = ?', 'ab');
   t.equal(db.sql, 'SELECT COUNT(1) FROM ' + TABLE + ' WHERE name = ?');

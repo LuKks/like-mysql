@@ -71,20 +71,14 @@ After every execution the next variables are overwritten for immediate usage:
 // on every operation:
 db.sql: String
 db.values: Array
-// only on select, selectOne, exists or count:
-db.rows: Array
-db.fields: Array
-// only on insert, update or delete:
-db.insertId: Number
-db.fieldCount: Number
-db.affectedRows: Number
-// only on update:
-db.changedRows: Number
 ```
 
 #### Methods
 ```javascript
+db.createLink(host: String, user: String, password: String, database: String, options: Object): Object
 db.waitConnection(retry = 5: Number, time = 500: Number): undefined
+db.createDatabase(name: String, options: Object): ??????
+db.createTable(name: String, columns: Object, options: Object): ??????
 db.insert(table: String, data: Object): Object
 db.select(table: String, cols: Array, find?: String, ...any): Array
 db.selectOne(table: String, cols: Array, find?: String, ...any): Object | undefined
@@ -119,11 +113,9 @@ async function main () {
 // INSERT INTO ip (addr, hits) VALUES (?, ?)
 let a = await db.insert('ip', { addr: req.ip, hits: 0 });
 console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 1336, ... }
-console.log(db.insertId); // 1336
 
 let b = await db.insert('ip', { addr: req.ip, hits: 0 });
 console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 1337, ... }
-console.log(db.insertId); // 1337
 ```
 
 #### select
@@ -131,12 +123,10 @@ console.log(db.insertId); // 1337
 // SELECT addr, hits FROM ip ORDER BY hits DESC
 let a = await db.select('ip', ['addr', 'hits'], 'ORDER BY hits DESC');
 console.log(a); // [{ addr: '8.8.8.8', hits: 6 }, ...]
-console.log(db.rows); // [{ addr: '8.8.8.8', hits: 6 }, ...]
 
 // SELECT addr, hits FROM ip WHERE addr = ?
 let b = await db.select('ip', ['addr', 'hits'], 'addr = ?', req.ip);
 console.log(b); // [{ addr: '8.8.4.4', hits: 2 }]
-console.log(db.rows); // [{ addr: '8.8.4.4', hits: 2 }]
 ```
 
 #### selectOne
@@ -144,12 +134,10 @@ console.log(db.rows); // [{ addr: '8.8.4.4', hits: 2 }]
 // SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
 let a = await db.selectOne('ip', ['addr', 'hits'], 'addr = ?', req.ip);
 console.log(a); // { addr: '8.8.4.4', hits: 2 }
-console.log(db.rows); // [{ addr: '8.8.4.4', hits: 2 }]
 
 // SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
 let b = await db.selectOne('ip', ['addr', 'hits'], 'addr = ?', '0.0.0.0');
 console.log(b); // undefined
-console.log(db.rows); // []
 ```
 
 #### exists
@@ -171,12 +159,10 @@ console.log(a); // 2
 // UPDATE ip SET hits = ? WHERE addr = ?
 let a = await db.update('ip', { hits: 1 }, 'addr = ?', req.ip);
 console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
-console.log(db.affectedRows); // 1
 
 // UPDATE ip SET hits = hits + ? WHERE userid = ?
 let b = await db.update('ip', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip);
 console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
-console.log(db.affectedRows); // 1
 ```
 
 #### delete
@@ -184,7 +170,6 @@ console.log(db.affectedRows); // 1
 // DELETE FROM ip WHERE addr = ?
 let a = await db.delete('ip', 'addr = ?', req.ip);
 console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
-console.log(db.affectedRows); // 1
 ```
 
 #### transaction
