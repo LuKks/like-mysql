@@ -154,8 +154,8 @@ console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
 Normally with a pool you do something like:
 - `conn = pool.getConnection()`
 - `conn.beginTransaction()`
-- `conn.execute('INSERT INTO users (id, password) VALUES (?, ?)')`
-- `conn.execute('INSERT INTO profile (id, name) VALUES (?, ?)')`
+- `conn.execute('INSERT INTO users (username, password) VALUES (?, ?)')`
+- `conn.execute('INSERT INTO profile (owner, name) VALUES (?, ?)')`
 - `conn.commit()`
 - `conn.release()`
 
@@ -164,8 +164,8 @@ Also checking different catchs to release and/or rollback.
 This method simplifies all that and you just do the important part:
 ```javascript
 await db.transaction(async function (conn) {
-  const user = await conn.insert('users', { username: 'lukks', password: 'hwy123' })
-  await conn.insert('profiles', { owner: user.insertId, name: 'Lucas' })
+  const user = await conn.insert('users', { username: 'lukks', ... })
+  await conn.insert('profiles', { owner: user.insertId, ... })
 })
 ```
 
