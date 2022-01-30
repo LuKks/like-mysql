@@ -2,7 +2,7 @@
 
 Simple and intuitive ORM for MySQL
 
-![](https://img.shields.io/npm/v/like-mysql.svg) ![](https://img.shields.io/npm/dt/like-mysql.svg) ![](https://img.shields.io/badge/tested_with-tap-e683ff.svg) ![](https://img.shields.io/github/license/LuKks/like-mysql.svg)
+![](https://img.shields.io/npm/v/like-mysql.svg) ![](https://img.shields.io/npm/dt/like-mysql.svg) ![](https://img.shields.io/badge/tested_with-tape-e683ff.svg) ![](https://img.shields.io/github/license/LuKks/like-mysql.svg)
 
 ```javascript
 const mysql = require('like-mysql')
