@@ -11,7 +11,7 @@ const mysql = require('like-mysql')
 const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
 
 // wait until a connection is established
-await db.waitConnection()
+await db.available()
 
 // CREATE DATABASE IF NOT EXISTS `myapp` ...
 await db.createDatabase('myapp')
@@ -80,10 +80,10 @@ Automatic `WHERE` when `find` argument doesn't start with:\
 `ORDER BY`, `LIMIT` or `GROUP BY`
 
 ## Examples
-#### waitConnection
+#### available
 Wait for database started by docker-compose, etc.
 ```javascript
-db.waitConnection().then(main)
+db.available().then(main)
 
 async function main () {
   await db.query('...')

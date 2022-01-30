@@ -226,7 +226,7 @@ class LikeMySQL {
     }
   }
 
-  async waitConnection (timeout = 15000) {
+  async available (timeout = 15000) {
     const started = Date.now()
 
     while (true) {
