@@ -5,53 +5,65 @@ Simple and intuitive ORM for MySQL
 ![](https://img.shields.io/npm/v/like-mysql.svg) ![](https://img.shields.io/npm/dt/like-mysql.svg) ![](https://img.shields.io/badge/tested_with-tap-e683ff.svg) ![](https://img.shields.io/github/license/LuKks/like-mysql.svg)
 
 ```javascript
-const mysql = require('like-mysql');
+const mysql = require('like-mysql')
 
 // create a pool easily with good defaults
-const db = mysql.createLink('127.0.0.1:3306', 'root', 'secret', 'mydb');
+const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
 
 // wait until a connection is established
-db.waitConnection(); // => Promise as all next methods
+await db.waitConnection()
 
-// CREATE DATABASE IF NOT EXISTS `mydb` ...
-db.createDatabase('mydb');
+// CREATE DATABASE IF NOT EXISTS `myapp` ...
+await db.createDatabase('myapp')
 
-// CREATE TABLE IF NOT EXISTS `mydb`.`ip` (...)
-db.createTable('ip', {
+// CREATE TABLE IF NOT EXISTS `myapp`.`ips` (...)
+await db.createTable('ips', {
   id: { type: 'int', unsigned: true, increment: true, primary: true },
   addr: { type: 'varchar', length: 16, required: true, index: true },
   hits: { type: 'int', unsigned: true, default: 0 }
-});
+})
 
-// INSERT INTO ip (addr, hits) VALUES (?, ?)
-db.insert('ip', { addr: req.ip, hits: 0 });
+// INSERT INTO ips (addr, hits) VALUES (?, ?)
+await db.insert('ips', { addr: req.ip, hits: 0 })
 
-// SELECT addr, hits FROM ip WHERE addr = ?
-db.select('ip', ['addr', 'hits'], 'addr = ?', req.ip);
+// SELECT addr, hits FROM ips WHERE addr = ?
+await db.select('ips', ['addr', 'hits'], 'addr = ?', req.ip)
 
-// SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
-db.selectOne('ip', ['addr', 'hits'], 'addr = ?', req.ip);
+// SELECT addr, hits FROM ips WHERE addr = ? LIMIT 1
+await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
 
-// SELECT EXISTS(SELECT 1 FROM ip WHERE addr = ? LIMIT 1)
-db.exists('ip', 'addr = ?', req.ip);
+// SELECT EXISTS(SELECT 1 FROM ips WHERE addr = ? LIMIT 1)
+await db.exists('ips', 'addr = ?', req.ip)
 
-// SELECT COUNT(1) FROM ip WHERE addr = ?
-db.count('ip', 'addr = ?', req.ip);
+// SELECT COUNT(1) FROM ips WHERE addr = ?
+await db.count('ips', 'addr = ?', req.ip)
 
-// UPDATE ip SET hits = ? WHERE addr = ?
-db.update('ip', { hits: 1 }, 'addr = ?', req.ip);
+// UPDATE ips SET hits = ? WHERE addr = ?
+await db.update('ips', { hits: 1 }, 'addr = ?', req.ip)
 
-// UPDATE ip SET hits = hits + ? WHERE userid = ?
-db.update('ip', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip);
+// UPDATE ips SET hits = hits + ? WHERE userid = ?
+await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
 
-// DELETE FROM ip WHERE addr = ?
-db.delete('ip', 'addr = ?', req.ip);
+// DELETE FROM ips WHERE addr = ?
+await db.delete('ips', 'addr = ?', req.ip)
 
 // getConnection, beginTransaction, callback, commit/rollback, release
-db.transaction(async function (conn) {
-  await conn.insert('users', { id: 'lukks', password: 'hwy' });
-  await conn.insert('profile', { id: 'lukks', name: 'Lucas' });
-});
+await db.transaction(async function (conn) {
+  const user = await conn.insert('users', { username: 'lukks', password: 'hwy123' })
+  await conn.insert('profiles', { owner: user.insertId, name: 'Lucas' })
+})
+
+// execute
+await db.execute('SELECT * FROM `ips` WHERE `addr` = ?', [req.ip])
+
+// query
+await db.query('SELECT * FROM `ips` WHERE `addr` = "8.8.8.8"')
+
+// DROP TABLE IF EXISTS `myapp`.`ips`
+await db.dropTable('ips')
+
+// DROP DATABASE IF EXISTS `myapp`
+await db.dropDatabase('myapp')
 ```
 
 ## Install
@@ -60,116 +72,73 @@ npm i like-mysql
 ```
 
 ## Features
-#### MySQL
-[sidorares/node-mysql2](https://github.com/sidorares/node-mysql2) as client, it's already well documented.\
+[sidorares/node-mysql2](https://github.com/sidorares/node-mysql2) is used internally.\
 Operations are prepared statements made by `execute`.\
 Promise version. All custom methods are also promised.
 
-#### Properties
-After every execution the next variables are overwritten for immediate usage:
-```javascript
-// on every operation:
-db.sql: String
-db.values: Array
-```
-
-#### Methods
-```javascript
-db.createLink(host: String, user: String, password: String, database: String, options: Object): Object
-db.waitConnection(retry = 5: Number, time = 500: Number): undefined
-db.createDatabase(name: String, options: Object): ??????
-db.createTable(name: String, columns: Object, options: Object): ??????
-db.insert(table: String, data: Object): Object
-db.select(table: String, cols: Array, find?: String, ...any): Array
-db.selectOne(table: String, cols: Array, find?: String, ...any): Object | undefined
-db.exists(table: String, find?: String, ...any): Boolean
-db.count (table: String, find?: String, ...any): Number
-db.update(table: String, data: Object, find?: String, ...any): Object
-db.update(table: String, data: Array[Object, ...any], find?: String, ...any): Object
-db.delete(table: String, find?: String, ...any): Object
-db.transaction(callback: Function): undefined
-```
-
-`transaction` and `waitConnection` methods only available on pool instances.
-
 Automatic `WHERE` when `find` argument doesn't start with:\
 `ORDER BY`, `LIMIT` or `GROUP BY`
-
-You still can use all other [node-mysql2](https://github.com/sidorares/node-mysql2) methods like `execute`, `query`, etc.
 
 ## Examples
 #### waitConnection
 Wait for database started by docker-compose, etc.
 ```javascript
-db.waitConnection().then(main);
+db.waitConnection().then(main)
 
 async function main () {
-  await db.query('...');
+  await db.query('...')
 }
 ```
 
 #### insert
 ```javascript
-// INSERT INTO ip (addr, hits) VALUES (?, ?)
-let a = await db.insert('ip', { addr: req.ip, hits: 0 });
-console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 1336, ... }
-
-let b = await db.insert('ip', { addr: req.ip, hits: 0 });
-console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 1337, ... }
+const ip = await db.insert('ips', { addr: req.ip, hits: 0 })
+console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 1336, ... }
 ```
 
 #### select
 ```javascript
-// SELECT addr, hits FROM ip ORDER BY hits DESC
-let a = await db.select('ip', ['addr', 'hits'], 'ORDER BY hits DESC');
-console.log(a); // [{ addr: '8.8.8.8', hits: 6 }, ...]
+const rows = await db.select('ips', ['*'], 'addr = ?', req.ip)
+console.log(rows) // [{ id: 2, addr: '8.8.4.4', hits: 2 }]
 
-// SELECT addr, hits FROM ip WHERE addr = ?
-let b = await db.select('ip', ['addr', 'hits'], 'addr = ?', req.ip);
-console.log(b); // [{ addr: '8.8.4.4', hits: 2 }]
+const rows = await db.select('ips', ['addr', 'hits'], 'ORDER BY hits DESC')
+console.log(rows) // [{ addr: '8.8.8.8', hits: 6 }, { addr: '8.8.4.4', hits: 2 }, ...]
 ```
 
 #### selectOne
 ```javascript
-// SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
-let a = await db.selectOne('ip', ['addr', 'hits'], 'addr = ?', req.ip);
-console.log(a); // { addr: '8.8.4.4', hits: 2 }
+const ip = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
+console.log(ip) // { addr: '8.8.4.4', hits: 2 }
 
-// SELECT addr, hits FROM ip WHERE addr = ? LIMIT 1
-let b = await db.selectOne('ip', ['addr', 'hits'], 'addr = ?', '0.0.0.0');
-console.log(b); // undefined
+const ip = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', '0.0.0.0')
+console.log(ip) // undefined
 ```
 
 #### exists
 ```javascript
-// SELECT EXISTS(SELECT 1 FROM ip WHERE addr = ? LIMIT 1)
-let a = await db.exists('ip', 'addr = ?', req.ip);
-console.log(a); // true
+const exists = await db.exists('ips', 'addr = ?', req.ip)
+console.log(exists) // true
 ```
 
 #### count
 ```javascript
-// SELECT COUNT(1) FROM ip WHERE addr = ?
-let a = await db.count('ip', 'addr = ?', req.ip);
-console.log(a); // 2
+const total = await db.count('ips', 'addr = ?', req.ip)
+console.log(total) // 2
 ```
 
 #### update
 ```javascript
-// UPDATE ip SET hits = ? WHERE addr = ?
-let a = await db.update('ip', { hits: 1 }, 'addr = ?', req.ip);
-console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
+const ip = await db.update('ips', { hits: 1 }, 'addr = ?', req.ip)
+console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
 
-// UPDATE ip SET hits = hits + ? WHERE userid = ?
-let b = await db.update('ip', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip);
-console.log(b); // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
+const ip = await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
+console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
 ```
 
 #### delete
 ```javascript
-// DELETE FROM ip WHERE addr = ?
-let a = await db.delete('ip', 'addr = ?', req.ip);
-console.log(a); // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
+const ip = await db.delete('ips', 'addr = ?', req.ip)
+console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
 ```
 
 #### transaction
@@ -186,17 +155,19 @@ Also checking different catchs to release and/or rollback.
 This method simplifies all that and you just do the important part:
 ```javascript
 await db.transaction(async function (conn) {
-  let result = await conn.insert('users', { username: 'lukks', password: 'hwy' });
-  await conn.insert('profile', { userid: result.insertId, name: 'Lucas' });
-});
+  const user = await conn.insert('users', { username: 'lukks', password: 'hwy123' })
+  await conn.insert('profiles', { owner: user.insertId, name: 'Lucas' })
+})
 ```
 
-The callback has the connection as context, so can avoid the first argument:
+You can also return a custom value:
 ```javascript
-await db.transaction(async function () {
-  await this.insert(...);
-  await this.insert(...);
-});
+const result = await db.transaction(async function (conn) {
+  await conn.insert(...)
+  return 'custom value'
+})
+
+console.log(result) // => 'custom value'
 ```
 
 ## Tests
