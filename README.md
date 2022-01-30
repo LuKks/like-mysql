@@ -71,7 +71,7 @@ await db.dropDatabase('myapp')
 npm i like-mysql
 ```
 
-## Features
+## Description
 [sidorares/node-mysql2](https://github.com/sidorares/node-mysql2) is used internally.\
 Operations are prepared statements made by `execute`.\
 Promise version. All custom methods are also promised.
@@ -80,6 +80,15 @@ Automatic `WHERE` when `find` argument doesn't start with:\
 `ORDER BY`, `LIMIT` or `GROUP BY`
 
 ## Examples
+#### constructor
+```javascript
+// host:port
+const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'mydb')
+
+// socketPath
+const db = new mysql('/var/lib/mysql/mysql.sock', 'root', 'secret', 'mydb')
+```
+
 #### available
 Wait for database started by docker-compose, etc.
 ```javascript
@@ -168,6 +177,12 @@ const result = await db.transaction(async function (conn) {
 })
 
 console.log(result) // => 'custom value'
+```
+
+#### pool
+```javascript
+// access to mysql2 pool object
+const pool = db.pool
 ```
 
 ## Tests
