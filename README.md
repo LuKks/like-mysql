@@ -179,12 +179,6 @@ const result = await db.transaction(async function (conn) {
 console.log(result) // => 'custom value'
 ```
 
-#### pool
-```javascript
-// access to mysql2 pool object
-const pool = db.pool
-```
-
 ## Tests
 Start a database instance
 ```
