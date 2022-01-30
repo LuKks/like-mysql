@@ -107,11 +107,11 @@ console.log(rows) // [{ addr: '8.8.8.8', hits: 6 }, { addr: '8.8.4.4', hits: 2 }
 
 #### selectOne
 ```javascript
-const ip = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
-console.log(ip) // { addr: '8.8.4.4', hits: 2 }
+const row = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
+console.log(row) // { addr: '8.8.4.4', hits: 2 }
 
-const ip = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', '0.0.0.0')
-console.log(ip) // undefined
+const row = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', '0.0.0.0')
+console.log(row) // undefined
 ```
 
 #### exists
