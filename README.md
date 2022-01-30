@@ -49,8 +49,8 @@ await db.delete('ips', 'addr = ?', req.ip)
 
 // getConnection, beginTransaction, callback, commit/rollback, release
 await db.transaction(async function (conn) {
-  const user = await conn.insert('users', { username: 'lukks', password: 'hwy123' })
-  await conn.insert('profiles', { owner: user.insertId, name: 'Lucas' })
+  const user = await conn.insert('users', { username: 'lukks', ... })
+  await conn.insert('profiles', { owner: user.insertId, ... })
 })
 
 // execute
