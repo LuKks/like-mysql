@@ -11,12 +11,6 @@ tape('able to connect', async function (t) {
   await db.end()
 })
 
-tape('end without ready', async function (t) {
-  const db = new mysql(...cfg)
-
-  await db.end()
-})
-
 tape('ready timeouts', async function (t) {
   const db = new mysql('127.0.0.1:1234', cfg[1], cfg[2], cfg[3])
 
@@ -62,7 +56,7 @@ tape('limited connections', async function (t) {
   await db.end()
 })
 
-tape('create and drop database', async function (t) {
+tape('createDatabase() and dropDatabase()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -76,7 +70,7 @@ tape('create and drop database', async function (t) {
   await db.end()
 })
 
-tape('create database without any previous database', async function (t) {
+tape('createDatabase() without any previous database', async function (t) {
   const db = new mysql(cfg[0], cfg[1], cfg[2], '')
 
   await db.ready()
@@ -87,7 +81,7 @@ tape('create database without any previous database', async function (t) {
   await db.end()
 })
 
-tape('create and drop table', async function (t) {
+tape('createTable() and dropTable()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -107,7 +101,7 @@ tape('create and drop table', async function (t) {
 
 // + create complex tables
 
-tape('insert without autoincrement id', async function (t) {
+tape('insert() without autoincrement id', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -125,7 +119,7 @@ tape('insert without autoincrement id', async function (t) {
   await db.end()
 })
 
-tape('insert with autoincrement id', async function (t) {
+tape('insert() with autoincrement id', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -143,7 +137,7 @@ tape('insert with autoincrement id', async function (t) {
   await db.end()
 })
 
-tape('insert', async function (t) {
+tape('insert()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -177,7 +171,7 @@ tape('insert', async function (t) {
   await db.end()
 })
 
-tape('select', async function (t) {
+tape('select()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -232,7 +226,7 @@ tape('select', async function (t) {
   await db.end()
 })
 
-tape('selectOne', async function (t) {
+tape('selectOne()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -261,7 +255,7 @@ tape('selectOne', async function (t) {
   await db.end()
 })
 
-tape('exists', async function (t) {
+tape('exists()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -284,7 +278,7 @@ tape('exists', async function (t) {
   await db.end()
 })
 
-tape('count', async function (t) {
+tape('count()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -310,7 +304,7 @@ tape('count', async function (t) {
   await db.end()
 })
 
-tape('update', async function (t) {
+tape('update()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -336,7 +330,7 @@ tape('update', async function (t) {
   await db.end()
 })
 
-tape('update with arithmetic', async function (t) {
+tape('update() with arithmetic', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -357,7 +351,7 @@ tape('update with arithmetic', async function (t) {
   await db.end()
 })
 
-tape('delete', async function (t) {
+tape('delete()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -388,7 +382,7 @@ tape('delete', async function (t) {
   await db.end()
 })
 
-tape('transaction', async function (t) {
+tape('transaction()', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -398,7 +392,7 @@ tape('transaction', async function (t) {
     username: { type: 'varchar', length: 16 }
   })
   await db.createTable('profiles', {
-    id: { type: 'int', primary: true },
+    owner: { type: 'int', primary: true },
     name: { type: 'varchar', length: 16 }
   })
   await db.insert('users', { username: 'joe' })
@@ -417,11 +411,12 @@ tape('transaction', async function (t) {
   t.deepEqual(profile, { owner: 3, name: 'Alice' })
 
   await db.dropTable('users')
+  await db.dropTable('profiles')
 
   await db.end()
 })
 
-tape('transaction', async function (t) {
+tape('transaction() with error', async function (t) {
   const db = new mysql(...cfg)
 
   await db.ready()
@@ -456,7 +451,91 @@ tape('transaction', async function (t) {
   await db.end()
 })
 
+tape('execute()', async function (t) {
+  const db = new mysql(...cfg)
+
+  await db.ready()
+
+  await db.createTable('users', {
+    id: { type: 'int', increment: true, primary: true },
+    username: { type: 'varchar', length: 16 }
+  })
+  await db.insert('users', { username: 'joe' })
+  await db.insert('users', { username: 'bob' })
+
+  const [rows, fields] = await db.execute('SELECT * FROM `users` WHERE `username` = ?', ['joe'])
+  t.deepEqual(rows, [{ id: 1, username: 'joe' }])
+  t.ok(fields[0].name === 'id')
+  t.ok(fields[1].name === 'username')
+
+  await db.dropTable('users')
+
+  await db.end()
+})
+
+tape('query()', async function (t) {
+  const db = new mysql(...cfg)
+
+  await db.ready()
+
+  await db.createTable('users', {
+    id: { type: 'int', increment: true, primary: true },
+    username: { type: 'varchar', length: 16 }
+  })
+  await db.insert('users', { username: 'joe' })
+  await db.insert('users', { username: 'bob' })
+
+  const [rows, fields] = await db.query('SELECT * FROM `users` WHERE `username` = "joe"')
+  t.deepEqual(rows, [{ id: 1, username: 'joe' }])
+  t.ok(fields[0].name === 'id')
+  t.ok(fields[1].name === 'username')
+
+  await db.dropTable('users')
+
+  await db.end()
+})
+
+tape('without ready()', async function (t) {
+  const db = new mysql(...cfg)
+
+  await db.createTable('users', {
+    id: { type: 'int', increment: true, primary: true },
+    username: { type: 'varchar', length: 16 }
+  })
+  await db.insert('users', { username: 'joe' })
+  await db.insert('users', { username: 'bob' })
+
+  const [rows, fields] = await db.execute('SELECT * FROM `users` WHERE `username` = ?', ['joe'])
+  t.deepEqual(rows, [{ id: 1, username: 'joe' }])
+  t.ok(fields[0].name === 'id')
+  t.ok(fields[1].name === 'username')
+
+  await db.dropTable('users')
+
+  await db.end()
+})
+
 /*
+readme:
+
+// CREATE DATABASE IF NOT EXISTS `myapp` ...
+await db.createDatabase('myapp')
+
+// CREATE TABLE IF NOT EXISTS `myapp`.`ips` (...)
+await db.createTable('ips', {
+  id: { type: 'int', unsigned: true, increment: true, primary: true },
+  addr: { type: 'varchar', length: 16, required: true, index: true },
+  hits: { type: 'int', unsigned: true, default: 0 }
+})
+
+// DROP TABLE IF EXISTS `myapp`.`ips`
+await db.dropTable('ips')
+
+// DROP DATABASE IF EXISTS `myapp`
+await db.dropDatabase('myapp')
+
+test:
+
 await db.createTable('items', {
   id: { type: 'int', unsigned: true, required: true, increment: true, primary: true },
   fullname: { type: 'varchar', length: 64, collate: 'utf8mb4_unicode_ci', required: true },
