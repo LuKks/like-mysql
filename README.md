@@ -10,44 +10,45 @@ const mysql = require('like-mysql')
 // create a pool easily with good defaults
 const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
 
-// wait until a connection is established (optional)
+// wait until a connection is established
 await db.ready()
 
 // INSERT INTO ips (addr, hits) VALUES (?, ?)
-await db.insert('ips', { addr: req.ip, hits: 0 })
+const id = await db.insert('ips', { addr: req.ip, hits: 0 })
 
 // SELECT addr, hits FROM ips WHERE addr = ?
-await db.select('ips', ['addr', 'hits'], 'addr = ?', req.ip)
+const rows = await db.select('ips', ['addr', 'hits'], 'addr = ?', req.ip)
 
 // SELECT addr, hits FROM ips WHERE addr = ? LIMIT 1
-await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
+const row = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
 
 // SELECT EXISTS(SELECT 1 FROM ips WHERE addr = ? LIMIT 1)
-await db.exists('ips', 'addr = ?', req.ip)
+const exists = await db.exists('ips', 'addr = ?', req.ip)
 
 // SELECT COUNT(1) FROM ips WHERE addr = ?
-await db.count('ips', 'addr = ?', req.ip)
+const count = await db.count('ips', 'addr = ?', req.ip)
 
 // UPDATE ips SET hits = ? WHERE addr = ?
-await db.update('ips', { hits: 1 }, 'addr = ?', req.ip)
+const changedRows = await db.update('ips', { hits: 1 }, 'addr = ?', req.ip)
 
 // UPDATE ips SET hits = hits + ? WHERE userid = ?
-await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
+const changedRows = await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
 
 // DELETE FROM ips WHERE addr = ?
-await db.delete('ips', 'addr = ?', req.ip)
+const affectedRows = await db.delete('ips', 'addr = ?', req.ip)
 
 // getConnection, beginTransaction, callback, commit/rollback, release
-await db.transaction(async function (conn) {
+const customValue = await db.transaction(async function (conn) {
   const user = await conn.insert('users', { username: 'lukks', ... })
   await conn.insert('profiles', { owner: user.insertId, ... })
+  return 'custom value'
 })
 
 // execute
-await db.execute('SELECT * FROM `ips` WHERE `addr` = ?', [req.ip])
+const [rows, cols] = await db.execute('SELECT * FROM `ips` WHERE `addr` = ?', [req.ip])
 
 // query
-await db.query('SELECT * FROM `ips` WHERE `addr` = "8.8.8.8"')
+const [rows, cols] = await db.query('SELECT * FROM `ips` WHERE `addr` = "8.8.8.8"')
 
 // end pool
 await db.end()
