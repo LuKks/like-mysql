@@ -3,6 +3,13 @@
   "version": "1.2.0",
   "description": "Simple and intuitive ORM for MySQL",
   "main": "index.js",
+  "dependencies": {
+    "mysql2": "^2.3.3"
+  },
+  "devDependencies": {
+    "standard": "^16.0.4",
+    "tape": "^5.5.0"
+  },
   "scripts": {
     "test": "standard && tape test.js",
     "tape": "tape test.js",
@@ -17,7 +24,7 @@
   "bugs": {
     "url": "https://github.com/LuKks/like-mysql/issues"
   },
-  "homepage": "https://github.com/LuKks/like-mysql#readme",
+  "homepage": "https://github.com/LuKks/like-mysql",
   "keywords": [
     "like",
     "mysql",
@@ -26,12 +33,5 @@
     "orm",
     "mysql2",
     "promise"
-  ],
-  "devDependencies": {
-    "standard": "^16.0.4",
-    "tape": "^5.5.0"
-  },
-  "dependencies": {
-    "mysql2": "^2.3.3"
-  }
+  ]
 }

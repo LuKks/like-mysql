@@ -1,6 +1,10 @@
 const mysql = require('mysql2/promise')
 // + support for sqlite?
 
+module.exports = function (hostname, user, password, database, opts = {}) {
+  return new LikePool(hostname, user, password, database, opts)
+}
+
 class LikeMySQL {
   constructor (opts = {}) {
     this.charset = opts.charset || 'utf8mb4'
@@ -258,31 +262,23 @@ class LikeMySQL {
 
 class LikePool extends LikeMySQL {
   constructor (hostname, user, password, database, opts = {}) {
-    // support for: new mysql(pool)
-    if (typeof hostname === 'object' && password === undefined) {
-      this.pool = hostname
-      opts = user || {}
-    }
-
     super(opts)
 
-    if (!this.pool) {
-      const { host, port, socketPath } = LikeMySQL.parseHostname(hostname)
+    const { host, port, socketPath } = LikeMySQL.parseHostname(hostname)
 
-      this.pool = mysql.createPool({
-        host: host || '127.0.0.1',
-        port: port || 3306,
-        socketPath: socketPath || '',
-        user: user || 'root',
-        password: password || '',
-        database: database || '',
-        charset: this.collate, // in createPool options, charset is collate value
-        supportBigNumbers: typeof opts.supportBigNumbers === 'boolean' ? opts.supportBigNumbers : true,
-        decimalNumbers: typeof opts.decimalNumbers === 'boolean' ? opts.decimalNumbers : true,
-        connectionLimit: opts.connectionLimit || 20,
-        waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true
-      })
-    }
+    this.pool = mysql.createPool({
+      host: host || '127.0.0.1',
+      port: port || 3306,
+      socketPath: socketPath || '',
+      user: user || 'root',
+      password: password || '',
+      database: database || '',
+      charset: this.collate, // in createPool options, charset is collate value
+      supportBigNumbers: typeof opts.supportBigNumbers === 'boolean' ? opts.supportBigNumbers : true,
+      decimalNumbers: typeof opts.decimalNumbers === 'boolean' ? opts.decimalNumbers : true,
+      connectionLimit: opts.connectionLimit || 20,
+      waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true
+    })
   }
 
   async getConnection () {
@@ -393,8 +389,6 @@ class LikeConnection extends LikeMySQL {
     return this.connection.release()
   }
 }
-
-module.exports = LikePool
 
 // mysqldump -h 127.0.0.1 --port=3307 -u root -p meli categories > categories.sql
 // db.dump()

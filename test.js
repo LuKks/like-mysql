@@ -4,7 +4,7 @@ const mysql = require('./')
 const cfg = ['127.0.0.1:3305', 'root', 'secret', 'sys']
 
 tape('able to connect', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -12,7 +12,7 @@ tape('able to connect', async function (t) {
 })
 
 tape('ready timeouts', async function (t) {
-  const db = new mysql('127.0.0.1:1234', cfg[1], cfg[2], cfg[3])
+  const db = mysql('127.0.0.1:1234', cfg[1], cfg[2], cfg[3])
 
   try {
     await db.ready(0)
@@ -25,7 +25,7 @@ tape('ready timeouts', async function (t) {
 })
 
 tape('should not connect due unexisting database', async function (t) {
-  const db = new mysql(cfg[0], cfg[1], cfg[2], 'database-not-exists')
+  const db = mysql(cfg[0], cfg[1], cfg[2], 'database-not-exists')
 
   try {
     await db.ready()
@@ -38,7 +38,7 @@ tape('should not connect due unexisting database', async function (t) {
 })
 
 tape('limited connections', async function (t) {
-  const db = new mysql(...cfg, { connectionLimit: 1, waitForConnections: false })
+  const db = mysql(...cfg, { connectionLimit: 1, waitForConnections: false })
 
   await db.ready()
 
@@ -57,7 +57,7 @@ tape('limited connections', async function (t) {
 })
 
 tape('createDatabase() and dropDatabase()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -71,7 +71,7 @@ tape('createDatabase() and dropDatabase()', async function (t) {
 })
 
 tape('createDatabase() without any previous database', async function (t) {
-  const db = new mysql(cfg[0], cfg[1], cfg[2], '')
+  const db = mysql(cfg[0], cfg[1], cfg[2], '')
 
   await db.ready()
 
@@ -82,7 +82,7 @@ tape('createDatabase() without any previous database', async function (t) {
 })
 
 tape('createTable() and dropTable()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -102,7 +102,7 @@ tape('createTable() and dropTable()', async function (t) {
 // + create complex tables
 
 tape('insert() without autoincrement id', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -111,8 +111,8 @@ tape('insert() without autoincrement id', async function (t) {
     username: { type: 'varchar', length: 16 }
   })
 
-  t.ok(0 === await db.insert('users', { id: 1, username: 'joe' }))
-  t.ok(0 === await db.insert('users', { id: 2, username: 'joe' }))
+  t.ok(await db.insert('users', { id: 1, username: 'joe' }) === 0)
+  t.ok(await db.insert('users', { id: 2, username: 'joe' }) === 0)
 
   await db.dropTable('users')
 
@@ -120,7 +120,7 @@ tape('insert() without autoincrement id', async function (t) {
 })
 
 tape('insert() with autoincrement id', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -129,8 +129,8 @@ tape('insert() with autoincrement id', async function (t) {
     username: { type: 'varchar', length: 16 }
   })
 
-  t.ok(1 === await db.insert('users', { username: 'joe' }))
-  t.ok(2 === await db.insert('users', { username: 'bob' }))
+  t.ok(await db.insert('users', { username: 'joe' }) === 1)
+  t.ok(await db.insert('users', { username: 'bob' }) === 2)
 
   await db.dropTable('users')
 
@@ -138,7 +138,7 @@ tape('insert() with autoincrement id', async function (t) {
 })
 
 tape('insert()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -172,7 +172,7 @@ tape('insert()', async function (t) {
 })
 
 tape('select()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -190,17 +190,17 @@ tape('select()', async function (t) {
 
   const rows2 = await db.select('users', ['username'])
   t.ok(rows2.length === 2)
-  t.deepEqual(rows2[0], { username: 'joe'})
+  t.deepEqual(rows2[0], { username: 'joe' })
   t.deepEqual(rows2[1], { username: 'bob' })
 
   const rows3 = await db.select('users', ['username'], 'LIMIT 1')
   t.ok(rows3.length === 1)
-  t.deepEqual(rows3[0], { username: 'joe'})
+  t.deepEqual(rows3[0], { username: 'joe' })
 
   const findUsername = 'joe'
   const rows4 = await db.select('users', ['password'], 'username = ?', findUsername)
   t.ok(rows4.length === 1)
-  t.deepEqual(rows4[0], { password: '123'})
+  t.deepEqual(rows4[0], { password: '123' })
 
   const rows5 = await db.select('users', ['*'], 'ORDER BY username ASC')
   t.ok(rows5.length === 2)
@@ -227,7 +227,7 @@ tape('select()', async function (t) {
 })
 
 tape('selectOne()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -256,7 +256,7 @@ tape('selectOne()', async function (t) {
 })
 
 tape('exists()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -279,7 +279,7 @@ tape('exists()', async function (t) {
 })
 
 tape('count()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -305,7 +305,7 @@ tape('count()', async function (t) {
 })
 
 tape('update()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -316,14 +316,14 @@ tape('update()', async function (t) {
   await db.insert('users', { username: 'joe', password: '123' })
   await db.insert('users', { username: 'bob', password: '456' })
 
-  t.ok(1 === await db.update('users', { username: 'alice' }, 'username = ?', 'bob')) // 1 chg, 1 aff
+  t.ok(await db.update('users', { username: 'alice' }, 'username = ?', 'bob') === 1) // 1 chg, 1 aff
 
-  t.ok(1 === await db.update('users', { username: 'alice' })) // 1 chg, 2 aff
+  t.ok(await db.update('users', { username: 'alice' }) === 1) // 1 chg, 2 aff
 
-  t.ok(0 === await db.update('users', { username: 'alice' }, 'username = ?', 'random-username')) // 0 chg, 0 aff
+  t.ok(await db.update('users', { username: 'alice' }, 'username = ?', 'random-username') === 0) // 0 chg, 0 aff
 
-  t.ok(2 === await db.update('users', { username: 'unique-username' }))
-  t.ok(1 === await db.update('users', { username: 'unique-username2' }, 'LIMIT 1'))
+  t.ok(await db.update('users', { username: 'unique-username' }) === 2)
+  t.ok(await db.update('users', { username: 'unique-username2' }, 'LIMIT 1') === 1)
 
   await db.dropTable('users')
 
@@ -331,7 +331,7 @@ tape('update()', async function (t) {
 })
 
 tape('update() with arithmetic', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -343,7 +343,7 @@ tape('update() with arithmetic', async function (t) {
   await db.insert('users', { username: 'bob', count: 0 })
 
   t.deepEqual({ count: 0 }, await db.selectOne('users', ['count'], 'username = ?', 'bob'))
-  t.ok(1 === await db.update('users', [{ count: 'count + ?' }, 1], 'username = ?', 'bob'))
+  t.ok(await db.update('users', [{ count: 'count + ?' }, 1], 'username = ?', 'bob') === 1)
   t.deepEqual({ count: 1 }, await db.selectOne('users', ['count'], 'username = ?', 'bob'))
 
   await db.dropTable('users')
@@ -352,7 +352,7 @@ tape('update() with arithmetic', async function (t) {
 })
 
 tape('delete()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -363,19 +363,19 @@ tape('delete()', async function (t) {
 
   await db.insert('users', { username: 'joe', count: 0 })
   await db.insert('users', { username: 'bob', count: 0 })
-  t.ok(2 === await db.delete('users'))
-  t.ok(0 === await db.delete('users'))
+  t.ok(await db.delete('users') === 2)
+  t.ok(await db.delete('users') === 0)
 
   await db.insert('users', { username: 'joe', count: 0 })
   await db.insert('users', { username: 'bob', count: 0 })
-  t.ok(1 === await db.delete('users', 'LIMIT 1'))
-  t.ok(1 === await db.delete('users'))
+  t.ok(await db.delete('users', 'LIMIT 1') === 1)
+  t.ok(await db.delete('users') === 1)
 
   await db.insert('users', { username: 'joe', count: 0 })
   await db.insert('users', { username: 'bob', count: 0 })
-  t.ok(1 === await db.delete('users', 'username = ?', 'bob'))
-  t.ok(0 === await db.delete('users', 'username = ?', 'bob'))
-  t.ok(1 === await db.delete('users', 'username = ?', 'joe'))
+  t.ok(await db.delete('users', 'username = ?', 'bob') === 1)
+  t.ok(await db.delete('users', 'username = ?', 'bob') === 0)
+  t.ok(await db.delete('users', 'username = ?', 'joe') === 1)
 
   await db.dropTable('users')
 
@@ -383,7 +383,7 @@ tape('delete()', async function (t) {
 })
 
 tape('transaction()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -417,7 +417,7 @@ tape('transaction()', async function (t) {
 })
 
 tape('transaction() with error', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -437,14 +437,14 @@ tape('transaction() with error', async function (t) {
     t.fail('transaction should have throw an error')
   } catch (error) {
     t.ok(error.message === 'test error')
-    t.ok(2 === await db.count('users'))
+    t.ok(await db.count('users') === 2)
   }
 
   await db.transaction(async function (conn) {
     await conn.delete('users', 'username = ?', 'joe')
     await conn.delete('users', 'username = ?', 'bob')
   })
-  t.ok(0 === await db.count('users'))
+  t.ok(await db.count('users') === 0)
 
   await db.dropTable('users')
 
@@ -452,7 +452,7 @@ tape('transaction() with error', async function (t) {
 })
 
 tape('execute()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -474,7 +474,7 @@ tape('execute()', async function (t) {
 })
 
 tape('query()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.ready()
 
@@ -496,7 +496,7 @@ tape('query()', async function (t) {
 })
 
 tape('without ready()', async function (t) {
-  const db = new mysql(...cfg)
+  const db = mysql(...cfg)
 
   await db.createTable('users', {
     id: { type: 'int', increment: true, primary: true },

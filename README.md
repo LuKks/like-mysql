@@ -8,7 +8,7 @@ Simple and intuitive ORM for MySQL
 const mysql = require('like-mysql')
 
 // create a pool easily with good defaults
-const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
+const db = mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
 
 // wait until a connection is established
 await db.ready()
@@ -70,10 +70,10 @@ Automatic `WHERE` when `find` argument doesn't start with:\
 #### constructor
 ```javascript
 // host:port
-const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'mydb')
+const db = mysql('127.0.0.1:3306', 'root', 'secret', 'mydb')
 
 // socketPath
-const db = new mysql('/var/lib/mysql/mysql.sock', 'root', 'secret', 'mydb')
+const db = mysql('/var/lib/mysql/mysql.sock', 'root', 'secret', 'mydb')
 ```
 
 #### ready
