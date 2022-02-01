@@ -27,6 +27,7 @@ class LikeMySQL {
     return res.warningStatus === 0
   }
 
+  // + old code for creating table
   async createTable (name, columns, options) {
     const database = this.pool.pool.config.connectionConfig.database
 
@@ -163,6 +164,7 @@ class LikeMySQL {
     return res.affectedRows
   }
 
+  // + old code for parsing column
   static parseColumn (name, value, primaryKeys) {
     // inline, for example { price: 'decimal(11,2) NOT NULL' }
     /*
@@ -220,6 +222,7 @@ class LikeMySQL {
     return `  \`${name}\` ${type}${length}${unsigned}${collate}${required}${defaultt}${increment}`
   }
 
+  // + old code for parsing index
   static parseIndex (type, index) {
     for (const key in index) {
       let columns = index[key]
