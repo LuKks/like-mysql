@@ -92,11 +92,11 @@ const db = new mysql('/var/lib/mysql/mysql.sock', 'root', 'secret', 'mydb')
 #### available
 Wait for database started by docker-compose, etc.
 ```javascript
-db.available().then(main)
+// default timeout (15s)
+await db.available() // will throw in case is not able to connect
 
-async function main () {
-  await db.query('...')
-}
+// custom timeout
+await db.available(5000)
 ```
 
 #### insert
@@ -182,10 +182,10 @@ console.log(result) // => 'custom value'
 ## Tests
 Start a database instance
 ```
-docker run --rm -p 3306:3306 -e MYSQL_ROOT_USER=root -e MYSQL_ROOT_PASSWORD=secret -d mysql:8.0
+docker run --rm -p 3305:3306 -e MYSQL_ROOT_USER=root -e MYSQL_ROOT_PASSWORD=secret -d mysql:8.0
 ```
 
-Wait a few seconds for instance creation and run tests
+Run tests
 ```
 npm test
 ```
