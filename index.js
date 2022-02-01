@@ -53,17 +53,17 @@ class LikeMySQL {
 
     const sql = `CREATE DATABASE IF NOT EXISTS \`${name}\` DEFAULT CHARACTER SET ${opts.charset} COLLATE ${opts.collate}`
     const [res] = await this.execute(sql)
-    return res
+    return res.warningStatus === 0
   }
 
   async dropDatabase (name) {
     const sql = `DROP DATABASE IF EXISTS \`${name}\``
     const [res] = await this.execute(sql)
-    return res
+    return res.warningStatus === 0
   }
 
   async createTable (name, columns, options) {
-    const database = this.pool.config.connectionConfig.database
+    const database = this.pool.pool.config.connectionConfig.database
 
     // defaults
     let primaryKeys = []
@@ -115,15 +115,15 @@ class LikeMySQL {
     // create table
     const sql = `CREATE TABLE IF NOT EXISTS \`${database}\`.\`${name}\` (${columns}${primaryKeys}${unique}${index})${engine}${increment}${charset}${collate}`
     const [res] = await this.execute(sql)
-    return res
+    return res.warningStatus === 0
   }
 
   async dropTable (name) {
-    const database = this.pool.config.connectionConfig.database
+    const database = this.pool.pool.config.connectionConfig.database
 
     const sql = `DROP TABLE IF EXISTS \`${database}\`.\`${name}\``
     const [res] = await this.execute(sql)
-    return res
+    return res.warningStatus === 0
   }
 
   async insert (table, data) {
@@ -133,10 +133,12 @@ class LikeMySQL {
 
     const sql = `INSERT INTO ${table} (${cols}) VALUES (${placeholders})`
     const [res] = await this.execute(sql, values)
-    return res
+    return res.insertId
   }
 
   async select (table, cols, find, ...values) {
+    if (!cols) cols = ['*']
+
     cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ')
     find = LikeMySQL.parseFind(find)
 
@@ -146,6 +148,8 @@ class LikeMySQL {
   }
 
   async selectOne (table, cols, find, ...values) {
+    if (!cols) cols = ['*']
+
     cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ')
     find = LikeMySQL.parseFind(find)
 
@@ -183,7 +187,7 @@ class LikeMySQL {
 
     const sql = `UPDATE ${table} SET ${set}${find}`
     const [res] = await this.execute(sql, values)
-    return res
+    return res.changedRows
   }
 
   async delete (table, find, ...values) {
@@ -191,7 +195,7 @@ class LikeMySQL {
 
     const sql = `DELETE FROM ${table}${find}`
     const [res] = await this.execute(sql, values)
-    return res
+    return res.affectedRows
   }
 
   async transaction (callback) {
