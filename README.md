@@ -100,31 +100,31 @@ console.log(insertId) // => 0
 #### select
 ```javascript
 const rows = await db.select('ips', ['*'], 'addr = ?', req.ip)
-console.log(rows) // [{ id: 2, addr: '8.8.4.4', hits: 2 }]
+console.log(rows) // => [{ id: 2, addr: '8.8.4.4', hits: 2 }]
 
 const rows = await db.select('ips', ['addr', 'hits'], 'ORDER BY hits DESC')
-console.log(rows) // [{ addr: '8.8.8.8', hits: 6 }, { addr: '8.8.4.4', hits: 2 }, ...]
+console.log(rows) // => [{ addr: '8.8.8.8', hits: 6 }, { addr: '8.8.4.4', hits: 2 }, ...]
 ```
 
 #### selectOne
 ```javascript
 const row = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
-console.log(row) // { addr: '8.8.4.4', hits: 2 }
+console.log(row) // => { addr: '8.8.4.4', hits: 2 }
 
 const row = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', '0.0.0.0')
-console.log(row) // undefined
+console.log(row) // => undefined
 ```
 
 #### exists
 ```javascript
 const exists = await db.exists('ips', 'addr = ?', req.ip)
-console.log(exists) // true
+console.log(exists) // => true
 ```
 
 #### count
 ```javascript
 const total = await db.count('ips', 'addr = ?', req.ip)
-console.log(total) // 2
+console.log(total) // => 2
 ```
 
 #### update
