@@ -38,10 +38,9 @@ await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
 await db.delete('ips', 'addr = ? LIMIT 1', req.ip)
 
 // getConnection, beginTransaction, callback, commit/rollback, release
-const customValue = await db.transaction(async function (conn) {
+await db.transaction(async function (conn) {
   const user = await conn.insert('users', { username: 'lukks', ... })
   await conn.insert('profiles', { owner: user.insertId, ... })
-  return 'custom value'
 })
 
 // execute
