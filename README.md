@@ -13,16 +13,6 @@ const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
 // wait until a connection is established (optional)
 await db.ready()
 
-// CREATE DATABASE IF NOT EXISTS `myapp` ...
-await db.createDatabase('myapp')
-
-// CREATE TABLE IF NOT EXISTS `myapp`.`ips` (...)
-await db.createTable('ips', {
-  id: { type: 'int', unsigned: true, increment: true, primary: true },
-  addr: { type: 'varchar', length: 16, required: true, index: true },
-  hits: { type: 'int', unsigned: true, default: 0 }
-})
-
 // INSERT INTO ips (addr, hits) VALUES (?, ?)
 await db.insert('ips', { addr: req.ip, hits: 0 })
 
@@ -59,11 +49,8 @@ await db.execute('SELECT * FROM `ips` WHERE `addr` = ?', [req.ip])
 // query
 await db.query('SELECT * FROM `ips` WHERE `addr` = "8.8.8.8"')
 
-// DROP TABLE IF EXISTS `myapp`.`ips`
-await db.dropTable('ips')
-
-// DROP DATABASE IF EXISTS `myapp`
-await db.dropDatabase('myapp')
+// end pool
+await db.end()
 ```
 
 ## Install
@@ -182,6 +169,11 @@ const result = await db.transaction(async function (conn) {
 })
 
 console.log(result) // => 'custom value'
+```
+
+#### end
+```javascript
+await db.end()
 ```
 
 ## Tests
