@@ -455,3 +455,28 @@ tape('transaction', async function (t) {
 
   await db.end()
 })
+
+/*
+await db.createTable('items', {
+  id: { type: 'int', unsigned: true, required: true, increment: true, primary: true },
+  fullname: { type: 'varchar', length: 64, collate: 'utf8mb4_unicode_ci', required: true },
+  description: { type: 'varchar', length: 256, required: true },
+  price: { type: 'decimal', length: [11, 2], required: true },
+  dni: { type: 'int', unsigned: true, required: true },
+  birthdate: { type: 'date', default: null },
+  liq: { type: 'decimal(11,2)', required: true },
+  cuit: { type: 'bigint', unsigned: true, required: true },
+  posted: { type: 'tinyint', unsigned: true, required: true }
+}, {
+  unique: {
+    person_dni: ['dni', 'fullname']
+  },
+  index: {
+    person2: ['fullname ASC', 'dni ASC']
+  },
+  engine: 'InnoDB',
+  increment: 95406,
+  charset: 'utf8mb4',
+  collate: 'utf8mb4_unicode_ci'
+})
+*/
