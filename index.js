@@ -40,14 +40,10 @@ class LikeMySQL {
   }
 
   query (sql) {
-    this.sql = sql
-    this.values = undefined
     return this.pool.query(sql)
   }
 
   execute (sql, values) {
-    this.sql = sql
-    this.values = values
     return this.pool.execute(sql, values)
   }
 
