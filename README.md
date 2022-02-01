@@ -28,14 +28,14 @@ const exists = await db.exists('ips', 'addr = ?', req.ip)
 // SELECT COUNT(1) FROM ips WHERE addr = ?
 const count = await db.count('ips', 'addr = ?', req.ip)
 
-// UPDATE ips SET hits = ? WHERE addr = ?
-const changedRows = await db.update('ips', { hits: 1 }, 'addr = ?', req.ip)
+// UPDATE ips SET hits = ? WHERE addr = ? LIMIT 1
+await db.update('ips', { hits: 1 }, 'addr = ? LIMIT 1', req.ip)
 
-// UPDATE ips SET hits = hits + ? WHERE userid = ?
-const changedRows = await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
+// UPDATE ips SET hits = hits + ? WHERE addr = ?
+await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
 
-// DELETE FROM ips WHERE addr = ?
-const affectedRows = await db.delete('ips', 'addr = ?', req.ip)
+// DELETE FROM ips WHERE addr = ? LIMIT 1
+await db.delete('ips', 'addr = ? LIMIT 1', req.ip)
 
 // getConnection, beginTransaction, callback, commit/rollback, release
 const customValue = await db.transaction(async function (conn) {
