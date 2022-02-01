@@ -10,8 +10,8 @@ const mysql = require('like-mysql')
 // create a pool easily with good defaults
 const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
 
-// wait until a connection is established
-await db.available()
+// wait until a connection is established (optional)
+await db.ready()
 
 // CREATE DATABASE IF NOT EXISTS `myapp` ...
 await db.createDatabase('myapp')
@@ -89,20 +89,25 @@ const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'mydb')
 const db = new mysql('/var/lib/mysql/mysql.sock', 'root', 'secret', 'mydb')
 ```
 
-#### available
+#### ready
 Wait for database started by docker-compose, etc.
 ```javascript
 // default timeout (15s)
-await db.available() // will throw in case is not able to connect
+await db.ready() // will throw in case is not able to connect
 
 // custom timeout
-await db.available(5000)
+await db.ready(5000)
 ```
 
 #### insert
 ```javascript
-const ip = await db.insert('ips', { addr: req.ip, hits: 0 })
-console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 1336, ... }
+// with autoincrement id:
+const insertId = await db.insert('ips', { addr: req.ip, hits: 0 })
+console.log(insertId) // => 1336
+
+// otherwise it always returns zero:
+const insertId = await db.insert('config', { key: 'title', value: 'Database' })
+console.log(insertId) // => 0
 ```
 
 #### select
@@ -137,17 +142,17 @@ console.log(total) // 2
 
 #### update
 ```javascript
-const ip = await db.update('ips', { hits: 1 }, 'addr = ?', req.ip)
-console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
+const changedRows = await db.update('ips', { hits: 1 }, 'addr = ?', req.ip)
+console.log(changedRows) // => 1
 
-const ip = await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
-console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 0, changedRows: 1, ... }
+const changedRows = await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
+console.log(changedRows) // => 1
 ```
 
 #### delete
 ```javascript
-const ip = await db.delete('ips', 'addr = ?', req.ip)
-console.log(ip) // { fieldCount: 0, affectedRows: 1, insertId: 0, ... }
+const affectedRows = await db.delete('ips', 'addr = ?', req.ip)
+console.log(affectedRows) // => 1
 ```
 
 #### transaction

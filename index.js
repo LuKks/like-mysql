@@ -2,49 +2,10 @@ const mysql = require('mysql2/promise')
 // + support for sqlite?
 
 class LikeMySQL {
-  /*
-  // socketPath
-  const db = new mysql('/var/lib/mysql/mysql.sock', 'root', 'secret', 'forex')
-
-  // host:port
-  const db = new mysql('127.0.0.1:3306', 'root', 'secret', 'forex')
-  */
-  constructor (hostname, user, password, database, opts = {}) {
-    const { host, port, socketPath } = LikeMySQL.parseHostname(hostname)
-
+  constructor (opts = {}) {
     this.charset = opts.charset || 'utf8mb4'
     this.collate = opts.collate || 'utf8mb4_unicode_ci'
     this.engine = opts.engine || 'InnoDB'
-
-    this.pool = mysql.createPool({
-      host: host || '127.0.0.1',
-      port: port || 3306,
-      socketPath: socketPath || '',
-      user: user || 'root',
-      password: password || '',
-      database: database || '',
-      charset: this.collate, // in createPool options, charset is collate value
-      supportBigNumbers: typeof opts.supportBigNumbers === 'boolean' ? opts.supportBigNumbers : true,
-      decimalNumbers: typeof opts.decimalNumbers === 'boolean' ? opts.decimalNumbers : true,
-      connectionLimit: opts.connectionLimit || 20,
-      waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true
-    })
-  }
-
-  getConnection () {
-    return this.pool.getConnection()
-  }
-
-  end () {
-    return this.pool.end()
-  }
-
-  query (sql) {
-    return this.pool.query(sql)
-  }
-
-  execute (sql, values) {
-    return this.pool.execute(sql, values)
   }
 
   async createDatabase (name, opts = {}) {
@@ -198,56 +159,6 @@ class LikeMySQL {
     return res.affectedRows
   }
 
-  async transaction (callback) {
-    const conn = await this.getConnection()
-    let output
-
-    await releaseOnError(conn, conn.beginTransaction())
-
-    try {
-      output = await callback(conn)
-      await conn.commit()
-    } catch (err) {
-      await releaseOnError(conn, conn.rollback())
-
-      conn.release()
-      throw err
-    }
-
-    conn.release()
-
-    return output
-
-    function releaseOnError (conn, promise) {
-      return promise.catch(err => {
-        conn.release()
-        throw err
-      })
-    }
-  }
-
-  async available (timeout = 15000) {
-    const started = Date.now()
-
-    while (true) {
-      try {
-        const conn = await this.getConnection()
-        conn.release()
-        break
-      } catch (err) {
-        if (Date.now() - started > timeout) {
-          throw err
-        }
-
-        await sleep(500)
-      }
-    }
-
-    function sleep (ms) {
-      return new Promise(resolve => setTimeout(resolve, ms))
-    }
-  }
-
   static parseColumn (name, value, primaryKeys) {
     // inline, for example { price: 'decimal(11,2) NOT NULL' }
     /*
@@ -345,7 +256,145 @@ class LikeMySQL {
   }
 }
 
-module.exports = LikeMySQL
+class LikePool extends LikeMySQL {
+  constructor (hostname, user, password, database, opts = {}) {
+    // support for: new mysql(pool)
+    if (typeof hostname === 'object' && password === undefined) {
+      this.pool = hostname
+      opts = user || {}
+    }
+
+    super(opts)
+
+    if (!this.pool) {
+      const { host, port, socketPath } = LikeMySQL.parseHostname(hostname)
+
+      this.pool = mysql.createPool({
+        host: host || '127.0.0.1',
+        port: port || 3306,
+        socketPath: socketPath || '',
+        user: user || 'root',
+        password: password || '',
+        database: database || '',
+        charset: this.collate, // in createPool options, charset is collate value
+        supportBigNumbers: typeof opts.supportBigNumbers === 'boolean' ? opts.supportBigNumbers : true,
+        decimalNumbers: typeof opts.decimalNumbers === 'boolean' ? opts.decimalNumbers : true,
+        connectionLimit: opts.connectionLimit || 20,
+        waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true
+      })
+    }
+  }
+
+  async getConnection () {
+    const conn = await this.pool.getConnection()
+    const db = new LikeConnection(conn)
+    return db
+  }
+
+  async ready (timeout = 15000) {
+    const started = Date.now()
+
+    while (true) {
+      try {
+        const conn = await this.pool.getConnection()
+        conn.release()
+        break
+      } catch (error) {
+        if (error.code === 'ER_BAD_DB_ERROR') throw error
+        if (error.message === 'No connections available.') throw error
+        if (Date.now() - started > timeout) throw error
+
+        await sleep(500)
+      }
+    }
+
+    function sleep (ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
+    }
+  }
+
+  query (sql, values) {
+    return this.pool.query(sql, values)
+  }
+
+  execute (sql, values) {
+    return this.pool.execute(sql, values)
+  }
+
+  end () {
+    return this.pool.end()
+  }
+
+  async transaction (callback) {
+    const conn = await this.getConnection()
+    let output
+
+    await releaseOnError(conn, conn.beginTransaction())
+
+    try {
+      output = await callback(conn)
+      await conn.commit()
+    } catch (err) {
+      await releaseOnError(conn, conn.rollback())
+
+      conn.release()
+      throw err
+    }
+
+    conn.release()
+
+    return output
+
+    function releaseOnError (conn, promise) {
+      return promise.catch(err => {
+        conn.release()
+        throw err
+      })
+    }
+  }
+}
+
+class LikeConnection extends LikeMySQL {
+  constructor (conn, opts = {}) {
+    super(opts)
+
+    this.connection = conn
+  }
+
+  query (sql, values) {
+    return this.connection.query(sql, values)
+  }
+
+  execute (sql, values) {
+    return this.connection.execute(sql, values)
+  }
+
+  end () {
+    return this.connection.end()
+  }
+
+  destroy () {
+    return this.connection.destroy()
+  }
+
+  beginTransaction () {
+    return this.connection.beginTransaction()
+  }
+
+  commit () {
+    return this.connection.commit()
+  }
+
+  rollback () {
+    return this.connection.rollback()
+  }
+
+  release () {
+    return this.connection.release()
+  }
+}
+
+module.exports = LikePool
 
 // mysqldump -h 127.0.0.1 --port=3307 -u root -p meli categories > categories.sql
 // db.dump()
