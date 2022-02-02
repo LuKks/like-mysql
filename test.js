@@ -37,6 +37,19 @@ tape('should not connect due unexisting database', async function (t) {
   await db.end()
 })
 
+tape('should not connect due wrong authentication', async function (t) {
+  const db = mysql(cfg[0], cfg[1], 'wrong-password', cfg[3])
+
+  try {
+    await db.ready()
+    t.fail('ready with wrong auth')
+  } catch (error) {
+    t.ok(error.code === 'ER_ACCESS_DENIED_ERROR')
+  }
+
+  await db.end()
+})
+
 tape('limited connections', async function (t) {
   const db = mysql(...cfg, { connectionLimit: 1, waitForConnections: false })
 
