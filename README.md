@@ -13,28 +13,28 @@ const db = mysql('127.0.0.1:3306', 'root', 'secret', 'myapp')
 // wait until a connection is established
 await db.ready()
 
-// INSERT INTO ips (addr, hits) VALUES (?, ?)
+// INSERT INTO `ips` (`addr`, `hits`) VALUES (?, ?)
 const id = await db.insert('ips', { addr: req.ip, hits: 0 })
 
-// SELECT addr, hits FROM ips WHERE addr = ?
+// SELECT `addr`, `hits` FROM `ips` WHERE addr = ?
 const rows = await db.select('ips', ['addr', 'hits'], 'addr = ?', req.ip)
 
-// SELECT addr, hits FROM ips WHERE addr = ? LIMIT 1
+// SELECT `addr`, `hits` FROM `ips` WHERE addr = ? LIMIT 1
 const row = await db.selectOne('ips', ['addr', 'hits'], 'addr = ?', req.ip)
 
-// SELECT EXISTS(SELECT 1 FROM ips WHERE addr = ? LIMIT 1)
+// SELECT EXISTS(SELECT 1 FROM `ips` WHERE addr = ? LIMIT 1)
 const exists = await db.exists('ips', 'addr = ?', req.ip)
 
-// SELECT COUNT(1) FROM ips WHERE addr = ?
+// SELECT COUNT(1) FROM `ips` WHERE addr = ?
 const count = await db.count('ips', 'addr = ?', req.ip)
 
-// UPDATE ips SET hits = ? WHERE addr = ? LIMIT 1
+// UPDATE `ips` SET `hits` = ? WHERE addr = ? LIMIT 1
 await db.update('ips', { hits: 1 }, 'addr = ? LIMIT 1', req.ip)
 
-// UPDATE ips SET hits = hits + ? WHERE addr = ?
+// UPDATE `ips` SET `hits` = hits + ? WHERE addr = ?
 await db.update('ips', [{ hits: 'hits + ?' }, 1], 'addr = ?', req.ip)
 
-// DELETE FROM ips WHERE addr = ? LIMIT 1
+// DELETE FROM `ips` WHERE addr = ? LIMIT 1
 await db.delete('ips', 'addr = ? LIMIT 1', req.ip)
 
 // getConnection, beginTransaction, callback, commit/rollback, release
@@ -59,7 +59,8 @@ npm i like-mysql
 ```
 
 ## Description
-[sidorares/node-mysql2](https://github.com/sidorares/node-mysql2) is used internally.\
+[sidorares/node-mysql2](https://github.com/sidorares/node-mysql2) is used to create the MySQL pool.\
+[lukks/like-sql](https://github.com/lukks/like-sql) is used to build the SQL queries.\
 Operations are prepared statements made by `execute`.\
 Promise version. All custom methods are also promised.
 
