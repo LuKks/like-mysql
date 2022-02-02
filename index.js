@@ -299,6 +299,7 @@ class LikePool extends LikeMySQL {
         conn.release()
         break
       } catch (error) {
+        if (error.code === 'ER_ACCESS_DENIED_ERROR') throw error
         if (error.code === 'ER_BAD_DB_ERROR') throw error
         if (error.message === 'No connections available.') throw error
         if (Date.now() - started > timeout) throw error
