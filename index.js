@@ -1,158 +1,220 @@
-/*
- like-mysql (https://npmjs.com/package/like-mysql)
- Copyright 2019 Lucas Barrena
- Licensed under MIT (https://github.com/LuKks/like-mysql)
-*/
+const SQL = require('like-sql')
+const mysql = require('mysql2/promise')
+// + support for sqlite?
 
-'use strict';
-
-const mysql = require('mysql2/promise');
-
-function insert (table, data) {
-  let cols = Object.keys(data).map(c => '`' + c + '`').join(', ');
-  let values = Object.values(data);
-  let placeholders = Array(values.length).fill('?').join(', ');
-
-  return execute.call(this, `INSERT INTO ${table} (${cols}) VALUES (${placeholders})`, values);
+module.exports = function (hostname, user, password, database, opts = {}) {
+  return new LikePool(hostname, user, password, database, opts)
 }
 
-function select (table, cols, find, ...values) {
-  cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ');
-  find = parseFind(find);
+class MySQL extends SQL {
+  constructor (opts = {}) {
+    super(opts)
 
-  return execute.call(this, `SELECT ${cols} FROM ${table}${find}`, values);
-}
-
-function selectOne (table, cols, find, ...values) {
-  cols = cols.map(c => (c === '*') ? c : ('`' + c + '`')).join(', ');
-  find = parseFind(find);
-
-  return execute.call(this, `SELECT ${cols} FROM ${table}${find} LIMIT 1`, values).then(() => {
-    return this.rows.length ? this.rows[0] : undefined;
-  });
-}
-
-function exists (table, find, ...values) {
-  find = parseFind(find);
-
-  return execute.call(this, `SELECT EXISTS(SELECT 1 FROM ${table}${find} LIMIT 1)`, values).then(() => {
-    return this.rows[0][this.fields[0].name] ? true : false;
-  });
-}
-
-function count (table, find, ...values) {
-  find = parseFind(find);
-
-  return execute.call(this, `SELECT COUNT(1) FROM ${table}${find}`, values).then(() => {
-    return this.rows[0][this.fields[0].name];
-  });
-}
-
-function update (table, data, find, ...values) {
-  let set = [];
-  let arithmetic = Array.isArray(data);
-  let dataRef = arithmetic ? data[0] : data;
-  for (let k in dataRef) {
-    set.push('`' + k + '` = ' + (arithmetic ? dataRef[k] : '?'));
+    this.charset = opts.charset === undefined ? 'utf8mb4' : opts.charset
+    this.collate = opts.collate === undefined ? 'utf8mb4_unicode_ci' : opts.collate
+    this.engine = opts.engine === undefined ? 'InnoDB' : opts.engine
   }
-  set = set.join(', ');
-  find = parseFind(find);
-  values.unshift(...Object.values(arithmetic ? data.slice(1) : data));
 
-  return execute.call(this, `UPDATE ${table} SET ${set}${find}`, values);
+  async _createDatabase (sql) {
+    const [res] = await this.execute(sql)
+    return res.warningStatus === 0
+  }
+
+  async _dropDatabase (sql) {
+    const [res] = await this.execute(sql)
+    return res.warningStatus === 0
+  }
+
+  async _createTable (sql) {
+    const [res] = await this.execute(sql)
+    return res.warningStatus === 0
+  }
+
+  async _dropTable (sql) {
+    const [res] = await this.execute(sql)
+    return res.warningStatus === 0
+  }
+
+  async _insert (sql, values) {
+    const [res] = await this.execute(sql, values)
+    return res.insertId
+  }
+
+  async _select (sql, values) {
+    const [res] = await this.execute(sql, values)
+    return res
+  }
+
+  async _selectOne (sql, values) {
+    const [res] = await this.execute(sql, values)
+    return res.length ? res[0] : undefined
+  }
+
+  async _exists (sql, values) {
+    const [res, fields] = await this.execute(sql, values)
+    return !!res[0][fields[0].name]
+  }
+
+  async _count (sql, values) {
+    const [res, fields] = await this.execute(sql, values)
+    return res[0][fields[0].name]
+  }
+
+  async _update (sql, values) {
+    const [res] = await this.execute(sql, values)
+    return res.changedRows
+  }
+
+  async _delete (sql, values) {
+    const [res] = await this.execute(sql, values)
+    return res.affectedRows
+  }
+
+  static parseHostname (host) {
+    let port
+    let socketPath
+    const semicolon = host.indexOf(':')
+    if (semicolon > -1) { // host:port
+      port = host.substr(semicolon + 1)
+      host = host.substr(0, semicolon)
+    } else { // socket path
+      socketPath = host
+      host = ''
+    }
+    return { host, port, socketPath }
+  }
 }
 
-function delet3 (table, find, ...values) {
-  find = parseFind(find);
+class LikePool extends MySQL {
+  constructor (hostname, user, password, database, opts = {}) {
+    super(opts)
 
-  return execute.call(this, `DELETE FROM ${table}${find}`, values);
-}
+    const { host, port, socketPath } = MySQL.parseHostname(hostname)
 
-/*
-parseFind('id = ?'); // WHERE id = ?
-parseFind('LIMIT 1'); // LIMIT 1
-*/
-function parseFind (find) {
-  if (!find) return '';
-  let known = ['ORDER BY', 'LIMIT', 'GROUP BY'].some(op => find.indexOf(op) === 0);
-  return known ? (' ' + find) : (' WHERE ' + find);
-}
+    this.pool = mysql.createPool({
+      host: host || '127.0.0.1',
+      port: port || 3306,
+      socketPath: socketPath || '',
+      user: user || 'root',
+      password: password || '',
+      database: database || '',
+      charset: this.collate, // in createPool options, charset is collate value
+      supportBigNumbers: typeof opts.supportBigNumbers === 'boolean' ? opts.supportBigNumbers : true,
+      decimalNumbers: typeof opts.decimalNumbers === 'boolean' ? opts.decimalNumbers : true,
+      connectionLimit: opts.connectionLimit || 20,
+      waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true
+    })
+  }
 
-function execute (sql, values) {
-  return this.execute(sql, values).then(([res, fields]) => {
-    this.sql = sql;
-    this.values = values;
-    if (fields) { // select
-      this.rows = res;
-      this.fields = fields;
-    } else { // insert, update, delete
-      this.insertId = res.insertId;
-      this.fieldCount = res.fieldCount;
-      this.affectedRows = res.affectedRows;
-      // update
-      if (typeof res.changedRows !== 'undefined') {
-        this.changedRows = res.changedRows;
+  async getConnection () {
+    const conn = await this.pool.getConnection()
+    const db = new LikeConnection(conn)
+    return db
+  }
+
+  async ready (timeout = 15000) {
+    const started = Date.now()
+
+    while (true) {
+      try {
+        const conn = await this.pool.getConnection()
+        conn.release()
+        break
+      } catch (error) {
+        if (error.code === 'ER_ACCESS_DENIED_ERROR') throw error
+        if (error.code === 'ER_BAD_DB_ERROR') throw error
+        if (error.message === 'No connections available.') throw error
+        if (Date.now() - started > timeout) throw error
+
+        await sleep(500)
       }
     }
-    return res;
-  });
-}
 
-async function transaction (callback) {
-  let conn = await this.getConnection();
-
-  await releaseOnError.call(conn, conn.beginTransaction());
-
-  let callbackResult;
-  try {
-    callbackResult = await callback.call(conn, conn);
-    await conn.commit();
-  } catch (err) {
-    await releaseOnError.call(conn, conn.rollback());
-
-    conn.release();
-    throw err;
+    function sleep (ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
+    }
   }
 
-  conn.release();
+  query (sql, values) {
+    return this.pool.query(sql, values)
+  }
 
-  return callbackResult;
-}
+  execute (sql, values) {
+    return this.pool.execute(sql, values)
+  }
 
-async function releaseOnError (promise) {
-  try {
-    await promise;
-  } catch (err) {
-    this.release();
-    throw err;
+  end () {
+    return this.pool.end()
+  }
+
+  async transaction (callback) {
+    const conn = await this.getConnection()
+    let output
+
+    await releaseOnError(conn, conn.beginTransaction())
+
+    try {
+      output = await callback(conn)
+      await conn.commit()
+    } catch (err) {
+      await releaseOnError(conn, conn.rollback())
+
+      conn.release()
+      throw err
+    }
+
+    conn.release()
+
+    return output
+
+    function releaseOnError (conn, promise) {
+      return promise.catch(err => {
+        conn.release()
+        throw err
+      })
+    }
   }
 }
 
-function waitConnection (retry = 5, time = 500) {
-  return new Promise((resolve, reject) => {
-    this.getConnection().then(conn => {
-      conn.release();
-      resolve();
-    }).catch(err => {
-      if (!--retry) return reject(err);
-      setTimeout(() => {
-        this.waitConnection(retry, time).then(resolve).catch(reject);
-      }, time);
-    });
-  });
+class LikeConnection extends MySQL {
+  constructor (conn, opts = {}) {
+    super(opts)
+
+    this.connection = conn
+  }
+
+  query (sql, values) {
+    return this.connection.query(sql, values)
+  }
+
+  execute (sql, values) {
+    return this.connection.execute(sql, values)
+  }
+
+  end () {
+    return this.connection.end()
+  }
+
+  destroy () {
+    return this.connection.destroy()
+  }
+
+  beginTransaction () {
+    return this.connection.beginTransaction()
+  }
+
+  commit () {
+    return this.connection.commit()
+  }
+
+  rollback () {
+    return this.connection.rollback()
+  }
+
+  release () {
+    return this.connection.release()
+  }
 }
 
-[mysql.PromiseConnection, mysql.PromisePool].forEach(base => {
-  let proto = {
-    rows: [], fields: [],
-    insertId: 0, fieldCount: 0, affectedRows: 0, changedRows: 0,
-    insert, select, selectOne, exists, count, update, delete: delet3
-  };
-
-  for (let k in proto) base.prototype[k] = proto[k];
-});
-
-mysql.PromisePool.prototype.transaction = transaction;
-mysql.PromisePool.prototype.waitConnection = waitConnection;
-
-module.exports = mysql;
+// mysqldump -h 127.0.0.1 --port=3307 -u root -p meli categories > categories.sql
+// db.dump()
