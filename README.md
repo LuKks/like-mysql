@@ -59,8 +59,8 @@ npm i like-mysql
 ```
 
 ## Description
-[sidorares/node-mysql2](https://github.com/sidorares/node-mysql2) is used to create the MySQL pool.\
-[lukks/like-sql](https://github.com/lukks/like-sql) is used to build the SQL queries.\
+[node-mysql2](https://github.com/sidorares/node-mysql2) is used to create the MySQL pool.\
+[like-sql](https://github.com/lukks/like-sql) is used to build the SQL queries.\
 Operations are prepared statements made by `execute`.\
 Promise version. All custom methods are also promised.
 
