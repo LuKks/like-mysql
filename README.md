@@ -39,8 +39,8 @@ await db.delete('ips', 'addr = ? LIMIT 1', req.ip)
 
 // getConnection, beginTransaction, callback, commit/rollback, release
 await db.transaction(async function (conn) {
-  const user = await conn.insert('users', { username: 'lukks', ... })
-  await conn.insert('profiles', { owner: user.insertId, ... })
+  const id = await conn.insert('users', { username: 'lukks', ... })
+  await conn.insert('profiles', { owner: id, ... })
 })
 
 // execute
@@ -157,8 +157,8 @@ Also checking different catchs to release and/or rollback.
 This method simplifies all that and you just do the important part:
 ```javascript
 await db.transaction(async function (conn) {
-  const user = await conn.insert('users', { username: 'lukks', ... })
-  await conn.insert('profiles', { owner: user.insertId, ... })
+  const id = await conn.insert('users', { username: 'lukks', ... })
+  await conn.insert('profiles', { owner: id, ... })
 })
 ```
 
