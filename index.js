@@ -102,7 +102,8 @@ class LikePool extends MySQL {
       supportBigNumbers: typeof opts.supportBigNumbers === 'boolean' ? opts.supportBigNumbers : true,
       decimalNumbers: typeof opts.decimalNumbers === 'boolean' ? opts.decimalNumbers : true,
       connectionLimit: opts.connectionLimit || 20,
-      waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true
+      waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true,
+      ssl: opts.ssl
     })
   }
 
