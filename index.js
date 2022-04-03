@@ -100,6 +100,7 @@ class LikePool extends MySQL {
       database: database || '',
       charset: this.collate, // in createPool options, charset is collate value
       supportBigNumbers: typeof opts.supportBigNumbers === 'boolean' ? opts.supportBigNumbers : true,
+      bigNumberStrings: typeof opts.bigNumberStrings === 'boolean' ? opts.bigNumberStrings : false,
       decimalNumbers: typeof opts.decimalNumbers === 'boolean' ? opts.decimalNumbers : true,
       connectionLimit: opts.connectionLimit || 20,
       waitForConnections: typeof opts.waitForConnections === 'boolean' ? opts.waitForConnections : true,
