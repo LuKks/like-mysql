@@ -44,10 +44,10 @@ await db.transaction(async function (conn) {
 })
 
 // execute
-const [rows, cols] = await db.execute('SELECT * FROM `ips` WHERE `addr` = ?', [req.ip])
+const [res, fields] = await db.execute('SELECT * FROM `ips` WHERE `addr` = ?', [req.ip])
 
 // query
-const [rows, cols] = await db.query('SELECT * FROM `ips` WHERE `addr` = "8.8.8.8"')
+const [res, fields] = await db.query('SELECT * FROM `ips` WHERE `addr` = "8.8.8.8"')
 
 // end pool
 await db.end()
